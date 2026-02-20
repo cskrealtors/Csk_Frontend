@@ -100,7 +100,17 @@ export const ApartmentDialog = ({
     if (mode === "edit" && fetchedUnit && open) {
       setFormData({
         ...fetchedUnit,
-        // memNo: fetchedUnit.memNo || "",
+
+        buildingId:
+          typeof fetchedUnit.buildingId === "object"
+            ? fetchedUnit.buildingId._id
+            : fetchedUnit.buildingId,
+
+        floorId:
+          typeof fetchedUnit.floorId === "object"
+            ? fetchedUnit.floorId._id
+            : fetchedUnit.floorId,
+
         plotNo: fetchedUnit.plotNo || "",
         villaFacing: fetchedUnit.villaFacing || "North",
         extent: fetchedUnit.extent || 0,
@@ -255,7 +265,7 @@ export const ApartmentDialog = ({
   const handleEnquiryChange = (
     index: number,
     field: "name" | "contact",
-    value: string
+    value: string,
   ) => {
     const updated = [...enquiryCustomers];
     updated[index][field] = value;
@@ -493,7 +503,7 @@ export const ApartmentDialog = ({
                 multiple
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []).filter((f) =>
-                    validateFile(f, "image", 5)
+                    validateFile(f, "image", 5),
                   );
                   const total = imagePreviews.length + files.length;
                   if (total > 5) {
@@ -553,93 +563,6 @@ export const ApartmentDialog = ({
             />
           </div>
 
-          {/* <div>
-            <Label className="font-semibold text-lg mb-2 block">
-              Enquiry Customers
-            </Label>
-            {enquiryCustomers.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-2 gap-4 mb-3 items-end"
-              >
-                <div>
-                  <Label>Name</Label>
-                  <Input
-                    value={item.name}
-                    onChange={(e) =>
-                      handleEnquiryChange(index, "name", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Label>Contact</Label>
-                    <Input
-                      value={item.contact}
-                      onChange={(e) =>
-                        handleEnquiryChange(index, "contact", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 pb-1">
-                    {index === enquiryCustomers.length - 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleAddEnquiry}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {enquiryCustomers.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleRemoveEnquiry(index)}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div> */}
-
-          {/* <div>
-            <Label className="font-semibold text-lg mb-2 block">
-              Purchased Customer
-            </Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Name</Label>
-                <Input
-                  value={purchasedCustomer.name}
-                  onChange={(e) =>
-                    setPurchasedCustomer({
-                      ...purchasedCustomer,
-                      name: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Contact</Label>
-                <Input
-                  value={purchasedCustomer.contact}
-                  onChange={(e) =>
-                    setPurchasedCustomer({
-                      ...purchasedCustomer,
-                      contact: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          </div> */}
-
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Switch
@@ -673,8 +596,8 @@ export const ApartmentDialog = ({
               {isCreating || isUpdating
                 ? "Saving..."
                 : mode === "add"
-                ? "Create Unit"
-                : "Update Unit"}
+                  ? "Create Unit"
+                  : "Update Unit"}
             </Button>
           </DialogFooter>
         </form>

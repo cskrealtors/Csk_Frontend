@@ -212,7 +212,7 @@ export default function OpenLandDetails({
               )}
             </div>
 
-            {land.brochureUrl && (
+            {/* {land.brochureUrl && (
               <Button
                 variant="outline"
                 className="mt-4"
@@ -229,7 +229,7 @@ export default function OpenLandDetails({
                 <FileText className="mr-2 h-4 w-4" />
                 Download Brochure
               </Button>
-            )}
+            )} */}
           </div>
         </div>
       </Card>
