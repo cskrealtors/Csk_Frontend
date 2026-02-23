@@ -65,7 +65,25 @@ export default function CsvInnerPlotUploader({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload Inner Plot CSV</DialogTitle>
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle className="text-lg font-semibold">
+              Upload Inner Plot CSV
+            </DialogTitle>
+            <Button
+              variant="outline"
+              className="shrink-0"
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = "/CSV-bulk-plot.csv";
+                link.download = "CSV-bulk-plot.csv";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+            >
+              Download Template
+            </Button>
+          </div>
         </DialogHeader>
 
         <Input
