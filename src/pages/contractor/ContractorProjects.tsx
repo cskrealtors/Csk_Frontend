@@ -183,6 +183,25 @@ const ContractorProjects = () => {
       console.log("Failed to create project", err);
     },
   });
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const { data } = await axios.delete(
+        `${import.meta.env.VITE_URL}/api/project/deleteProject/${projectId}`,
+        { withCredentials: true },
+      );
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Project deleted successfully");
+      query.invalidateQueries({ queryKey: ["fetchProjects"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "Failed to delete project");
+    },
+  });
+  const handleDelete = async (projectId: string) => {
+    deleteProjectMutation.mutate(projectId);
+  };
 
   if (floorUnitsError) {
     console.log("Failed to load floor units. Please try again.");
@@ -331,6 +350,7 @@ const ContractorProjects = () => {
               isLoading={projectLoad}
               isError={projectError}
               error={projectErr}
+              onDeleteProject={handleDelete}
             />
           </CardContent>
         </Card>

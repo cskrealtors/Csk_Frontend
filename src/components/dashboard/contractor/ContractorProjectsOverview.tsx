@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Clock, MoreVertical, Edit2 } from "lucide-react";
+import { Clock, MoreVertical, Edit2, Trash2 } from "lucide-react";
 import { Project, statusColors } from "@/utils/project/ProjectConfig";
 import {
   DropdownMenu,
@@ -20,12 +20,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 interface ContractorProjectsOverviewProps {
   projects?: Project[];
   isLoading?: boolean;
   isError?: boolean;
   error?: Error | null;
+  onDeleteProject?: (projectId: string) => void;
 }
 
 const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
@@ -33,10 +44,20 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
   isLoading,
   isError,
   error,
+  onDeleteProject,
 }) => {
   const [editProject, setEditProject] = useState<Project | null>(null);
-  // const [selectedTab, setSelectedTab] = useState("all");
   const [selectedTabs, setSelectedTabs] = useState<Record<string, string>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
+  const handleDelete = async () => {
+    if (!onDeleteProject || !deleteProjectId) return;
+
+    setDeletingId(deleteProjectId);
+    await onDeleteProject(deleteProjectId);
+    setDeletingId(null);
+    setDeleteProjectId(null);
+  };
 
   if (isLoading) {
     return (
@@ -66,7 +87,7 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
   return (
     <>
       <div className="space-y-7">
-        {projects?.map((project) => {
+        {projects.map((project) => {
           const unitsMap = project.units || {};
           const allTasks = Object.values(unitsMap).flat();
 
@@ -93,13 +114,12 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
             allTasks.length > 0
               ? Math.round((completedTasks.length / allTasks.length) * 100)
               : 0;
-
           return (
             <div
               key={project._id}
               className="border rounded-xl p-6 bg-card shadow-sm relative"
             >
-              {/* Three-dot menu */}
+              {/* Menu */}
               <div className="absolute top-4 right-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -107,23 +127,58 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => setEditProject(project)}
-                      className="cursor-pointer"
-                    >
+
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem onClick={() => setEditProject(project)}>
                       <Edit2 className="mr-2 h-4 w-4" />
                       Edit Project
                     </DropdownMenuItem>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault(); // prevents dropdown closing before dialog opens
+                            setDeleteProjectId(project._id);
+                          }}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Project
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently
+                            delete this project and its tasks.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-red-600 hover:bg-red-700"
+                          >
+                            {deletingId === project._id
+                              ? "Deleting..."
+                              : "Delete"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
 
-              {/* Project Header */}
+              {/* Header */}
               <div className="flex items-center justify-between pr-10">
                 <h2 className="text-xl font-semibold">
-                  {typeof project.projectId === "object" && project.projectId
-                    ? project?.projectId?.projectName
+                  {typeof project.projectId === "object"
+                    ? project.projectId?.projectName
                     : "Untitled Project"}
                 </h2>
 
@@ -132,43 +187,11 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
                   className={`text-sm ${
                     statusColors[
                       (project.status || "not started").toLowerCase()
-                    ] || statusColors["not started"]
+                    ]
                   }`}
                 >
                   {project?.status || "Status Unknown"}
                 </Badge>
-              </div>
-
-              <p className="text-sm text-muted-foreground mt-1">
-                {typeof project.projectId === "object" &&
-                  project.projectId?.location}
-              </p>
-
-              <p className="text-sm text-muted-foreground">
-                {project.floorUnit &&
-                  `Floor ${
-                    typeof project.floorUnit === "object" &&
-                    project.floorUnit.floorNumber
-                  }, ${
-                    typeof project.floorUnit === "object" &&
-                    project.floorUnit.unitType
-                  }`}
-                {project.unit &&
-                  ` • Plot ${
-                    typeof project.unit === "object" && project.unit.plotNo
-                  }`}
-              </p>
-
-              <div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Client: {project?.clientName || "N/A"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Estimated Budget: ₹
-                  {project.estimatedBudget
-                    ? project.estimatedBudget.toLocaleString("en-IN")
-                    : "N/A"}
-                </p>
               </div>
 
               {/* Progress */}
@@ -180,9 +203,6 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
                   </span>
                 </div>
                 <Progress value={progress} />
-                <p className="text-right text-xs text-muted-foreground">
-                  {progress}% Complete
-                </p>
               </div>
 
               {/* Tabs */}
@@ -195,7 +215,7 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
                   }))
                 }
               >
-                {/* Mobile: Select */}
+                {/* Mobile */}
                 <div className="md:hidden">
                   <Select
                     value={selectedTabs[project._id] || "all"}
@@ -235,7 +255,7 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
                     contractors={project.contractors}
                   />
                 </TabsContent>
-                <TabsContent value="pending">
+                <TabsContent value="pending_review">
                   <TaskList
                     tasks={pendingTasks}
                     contractors={project.contractors}
@@ -271,7 +291,6 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
         })}
       </div>
 
-      {/* Edit Dialog */}
       {editProject && (
         <EditProjectDialog
           project={editProject}

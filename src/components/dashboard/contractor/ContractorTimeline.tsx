@@ -90,10 +90,9 @@ const ContractorTimeline: React.FC = () => {
     queryFn: async () => {
       const { data } = await axios.get<Project[]>(
         `${import.meta.env.VITE_URL}/api/project/projects`,
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true },
       );
+
       const transformed: TimelineItem[] = [];
 
       data.forEach((project) => {
@@ -117,12 +116,16 @@ const ContractorTimeline: React.FC = () => {
         });
       });
 
-      // Sort by date
       return transformed.sort(
         (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
       );
     },
+
+    // 🔥 important
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   if (isError) {
@@ -155,7 +158,7 @@ const ContractorTimeline: React.FC = () => {
       groups[item.project].push(item);
       return groups;
     },
-    {} as Record<string, TimelineItem[]>
+    {} as Record<string, TimelineItem[]>,
   );
 
   const getStatusIcon = (status: string) => {

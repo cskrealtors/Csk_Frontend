@@ -214,34 +214,50 @@ const QualityControl = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData?.title || !projectId || !formData.severity) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    if (!formData.contractor) {
+      toast.error("Please select contractor");
+      return;
+    }
+
     setIsUploading(true);
+
     try {
       const uploadedImageUrls: string[] = [];
-      for (const photo of photos) {
-        const formData = new FormData();
-        formData.append("file", photo);
 
-        try {
-          const res = await axios.post(
-            `${import.meta.env.VITE_URL}/api/uploads/upload`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true,
-            },
-          );
-          if (res.data.url) uploadedImageUrls.push(res.data.url);
-        } catch (err) {
-          console.error("Upload failed", err);
-          toast.error("Failed to upload image");
+      for (const photo of photos) {
+        const fileData = new FormData();
+        fileData.append("file", photo);
+
+        const uploadRes = await axios.post(
+          `${import.meta.env.VITE_URL}/api/uploads/upload`,
+          fileData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          },
+        );
+
+        if (uploadRes.data.secure_url) {
+          uploadedImageUrls.push(uploadRes.data.secure_url);
         }
       }
 
       const payload = {
-        ...formData,
+        title: formData.title,
         project: projectId,
+        contractor: formData.contractor,
+        severity: formData.severity,
+        status: formData.status || "open",
+        description: formData.description,
         evidenceImages: uploadedImageUrls,
       };
+
       const res = await axios.post(
         `${import.meta.env.VITE_URL}/api/quality-issue/create-quality-issue`,
         payload,
@@ -250,8 +266,10 @@ const QualityControl = () => {
 
       if (res.status === 201) {
         toast.success("Issue reported successfully");
-        setIsDialogOpen(false);
+
+        setIsDialog(false);
         setPhotos([]);
+        setProjectId("");
         setFormData({
           title: "",
           project: "",
@@ -260,12 +278,12 @@ const QualityControl = () => {
           description: "",
           status: "",
         });
-        setProjectId("");
+
         queryClient.invalidateQueries({ queryKey: ["qualityIssues"] });
       }
     } catch (err) {
-      toast.error("Something went wrong");
       console.error(err);
+      toast.error("Something went wrong");
     } finally {
       setIsUploading(false);
     }
@@ -273,8 +291,8 @@ const QualityControl = () => {
 
   const getProjectName = (project: Project) => {
     return (
-      (typeof project.projectId === "object" &&
-        project.projectId.projectName) ||
+      (typeof project?.projectId === "object" &&
+        project?.projectId?.projectName) ||
       "Untitled Project"
     );
   };
@@ -512,11 +530,11 @@ const QualityControl = () => {
                         <SelectValue placeholder="Select Contractor" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all-projects">
-                          {contractorLoading
-                            ? "Loading..."
-                            : "Select Contractor"}
-                        </SelectItem>
+                        {contractorLoading && (
+                          <SelectItem value="loading" disabled>
+                            Loading...
+                          </SelectItem>
+                        )}
                         {!contractorLoading &&
                           contractors?.data?.map((c, idx) => (
                             <SelectItem key={c._id || idx} value={c._id}>
