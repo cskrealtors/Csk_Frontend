@@ -134,7 +134,7 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
                       Edit Project
                     </DropdownMenuItem>
 
-                    <AlertDialog>
+                    {/* <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <DropdownMenuItem
                           onSelect={(e) => {
@@ -169,7 +169,7 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
-                    </AlertDialog>
+                    </AlertDialog> */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
