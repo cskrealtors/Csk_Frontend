@@ -157,7 +157,26 @@ export default function BulkCsvUploader({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Upload CSV – Floors & Units</DialogTitle>
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle className="text-lg font-semibold">
+              Upload CSV – Floors & Units
+            </DialogTitle>
+
+            <Button
+              variant="outline"
+              className="shrink-0"
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = "/CSV-building-units.csv";
+                link.download = "CSV-building-units.csv";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+            >
+              Download Template
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">

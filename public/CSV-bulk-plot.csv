@@ -1,0 +1,11 @@
+area,facing,plotType,status,wastageArea,roadWidthFt,remarks
+150,East,Residential,Available,10,30,Near entrance
+165,West,Residential,Available,8,30,Corner plot
+180,North,Residential,Available,12,40,Main road facing
+200,South,Residential,Available,0,30,Premium plot
+220,East,Commercial,Available,0,50,High visibility location
+175,North,Residential,Available,6,30,Park facing
+190,West,Residential,Available,5,30,Near clubhouse
+210,South,Residential,Available,9,40,Wide road access
+230,East,Commercial,Available,0,60,Highway touch
+160,North,Residential,Available,7,30,Budget friendly plot
