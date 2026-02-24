@@ -371,11 +371,12 @@ export const useUnAssignedAgents = () => {
   });
 };
 
-export const useUnAssignedAgentsDropDown = () => {
+export const useUnAssignedAgentsDropDown = (enabled: boolean) => {
   return useQuery<UserResponse>({
     queryKey: ["agent-dropdown"],
     queryFn: fetchAgentsForDropDown,
     staleTime: 0,
+    enabled,
   });
 };
 
