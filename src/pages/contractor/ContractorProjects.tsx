@@ -122,7 +122,7 @@ const ContractorProjects = () => {
     isLoading: projectLoading,
     error: dropdownError,
     isError: dropdownIsError,
-  } = useProjects();
+  } = useProjects(dialogOpen);
 
   const {
     data: floorUnits = [],

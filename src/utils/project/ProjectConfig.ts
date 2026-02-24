@@ -149,6 +149,13 @@ export const fetchProjectsForDropdown = async () => {
   );
   return data.data;
 };
+export const fetchProjectsForDropdownSiteIncharge = async () => {
+  const { data } = await axios.get(
+    `${import.meta.env.VITE_URL}/api/project/projectsDropdown/site-incharge`,
+    { withCredentials: true },
+  );
+  return data.data;
+};
 
 export const fetchContractors = async () => {
   const { data } = await axios.get(
@@ -252,7 +259,12 @@ export const usefetchProjectsForDropdown = () => {
   return useQuery<Project[]>({
     queryKey: ["ProjectsForDropdown"],
     queryFn: fetchProjectsForDropdown,
-    staleTime: 5 * 60 * 1000,
+  });
+};
+export const usefetchProjectsForDropdownSiteIncharge = () => {
+  return useQuery<Project[]>({
+    queryKey: ["ProjectsForDropdown-siteincharge"],
+    queryFn: fetchProjectsForDropdownSiteIncharge,
   });
 };
 
@@ -260,7 +272,6 @@ export const usefetchContractors = () => {
   return useQuery<Contractor[]>({
     queryKey: ["fetchContractors"],
     queryFn: fetchContractors,
-    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -268,7 +279,6 @@ export const usefetchContractorDropDown = () => {
   return useQuery({
     queryKey: ["ContractorProjects"],
     queryFn: fetchContractorProjects,
-    staleTime: 5 * 60 * 1000,
   });
 };
 

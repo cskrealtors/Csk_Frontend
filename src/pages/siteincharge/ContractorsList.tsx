@@ -66,6 +66,7 @@ import {
   usefetchContractorListDropDown,
   usefetchContractors,
   usefetchProjectsForDropdown,
+  usefetchProjectsForDropdownSiteIncharge,
 } from "@/utils/project/ProjectConfig";
 import Loader from "@/components/Loader";
 import { Label } from "@/components/ui/label";
@@ -143,7 +144,7 @@ const ContractorsList = () => {
     isLoading: isLoadingProjects,
     isError: isErrorProjects,
     error: projectsDropdownError,
-  } = usefetchProjectsForDropdown();
+  } = usefetchProjectsForDropdownSiteIncharge();
 
   const {
     data: contractors = [],
