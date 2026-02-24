@@ -28,10 +28,12 @@ import { Lead } from "@/utils/leads/LeadConfig";
 import axios from "axios";
 import { InnerPlotDialog } from "./InnerPlotDialog";
 import { useNavigate } from "react-router-dom";
-import { getAllInnerPlot } from "@/api/innerPlot.api";
+// import { getAllInnerPlot } from "@/api/inneropenPlotData?.api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import BulkInnerPlotGenerator from "./BulkInnerPlotGenerator";
 import CsvInnerPlotUploader from "./CsvInnerPlotUploader";
+import { toast } from "sonner";
+import { getAllInnerPlot } from "@/api/innerPlot.api";
 
 export function getStatusBadge(status: string) {
   const statusColors: Record<string, string> = {
@@ -81,28 +83,32 @@ export function OpenPlotDetails({
   const canEdit = user && ["owner", "admin"].includes(user.role);
   const queryClient = useQueryClient();
 
-  // const {
-  //   data: leads = [],
-  //   isLoading: leadsLoading,
-  //   isError: leadsError,
-  //   error: leadErr,
-  // } = useLeadbyOpenPlotId(plot._id);
-
+  const { data: openPlotData, isLoading: plotLoading } = useQuery({
+    queryKey: ["open-plot", plot?._id],
+    queryFn: async () => {
+      const res = await axios.get(
+        `${import.meta.env.VITE_URL}/api/openPlot/getOpenplot/${plot?._id}`,
+      );
+      return res.data.data;
+    },
+    enabled: !!plot?._id,
+    initialData: plot,
+  });
   const {
     data: innerPlots = [],
     isLoading: innerPlotsLoading,
     isError: innerPlotsError,
   } = useQuery({
-    queryKey: ["inner-plots", plot._id],
-    queryFn: () => getAllInnerPlot(plot._id),
-    enabled: !!plot._id,
+    queryKey: ["inner-plots", openPlotData?._id],
+    queryFn: () => getAllInnerPlot(openPlotData?._id),
+    enabled: !!openPlotData?._id,
   });
 
   const galleryImages = useMemo(() => {
-    const allImages = new Set<string>(plot.images || []);
-    if (plot.thumbnailUrl) allImages.add(plot.thumbnailUrl);
+    const allImages = new Set<string>(openPlotData?.images || []);
+    if (openPlotData?.thumbnailUrl) allImages.add(openPlotData?.thumbnailUrl);
     return Array.from(allImages);
-  }, [plot.images, plot.thumbnailUrl]);
+  }, [openPlotData?.images, openPlotData?.thumbnailUrl]);
 
   const openLightbox = (imageSrc: string) => {
     setCurrentImage(imageSrc);
@@ -156,22 +162,26 @@ export function OpenPlotDetails({
       {/* Basic Info */}
       <Card>
         <div className="flex flex-col md:flex-row">
-          {plot.thumbnailUrl && (
+          {openPlotData?.thumbnailUrl && (
             <div className="md:w-1/3">
               <img
-                src={plot.thumbnailUrl}
-                alt={plot.projectName}
+                src={openPlotData?.thumbnailUrl}
+                alt={openPlotData?.projectName}
                 className="h-64 w-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
               />
             </div>
           )}
-          <div className={`${plot.thumbnailUrl ? "md:w-2/3" : "w-full"} p-6`}>
+          <div
+            className={`${openPlotData?.thumbnailUrl ? "md:w-2/3" : "w-full"} p-6`}
+          >
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-bold mb-1">{plot.projectName}</h2>
-                {getStatusBadge(plot.status)}
+                <h2 className="text-2xl font-bold mb-1">
+                  {openPlotData?.projectName}
+                </h2>
+                {getStatusBadge(openPlotData?.status)}
                 <p className="text-muted-foreground mt-1">
-                  Open Plot No: {plot.openPlotNo}
+                  Open Plot No: {openPlotData?.openPlotNo}
                 </p>
               </div>
             </div>
@@ -179,24 +189,24 @@ export function OpenPlotDetails({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
               <div className="flex items-center">
                 <Map className="h-5 w-5 mr-2 text-muted-foreground" />
-                <span>Location: {plot.location}</span>
+                <span>Location: {openPlotData?.location}</span>
               </div>
 
               <div className="flex items-center">
                 <Building className="h-5 w-5 mr-2 text-muted-foreground" />
                 <span>
-                  Total Area: {plot.totalArea} {plot.areaUnit}
+                  Total Area: {openPlotData?.totalArea} {openPlotData?.areaUnit}
                 </span>
               </div>
 
               <div className="flex items-center">
                 <Building className="h-5 w-5 mr-2 text-muted-foreground" />
-                <span>Facing: {plot.facing || "N/A"}</span>
+                <span>Facing: {openPlotData?.facing || "N/A"}</span>
               </div>
 
               <div className="flex items-center">
                 <Building className="h-5 w-5 mr-2 text-muted-foreground" />
-                <span>Road Width: {plot.roadWidthFt ?? "N/A"} ft</span>
+                <span>Road Width: {openPlotData?.roadWidthFt ?? "N/A"} ft</span>
               </div>
             </div>
           </div>
@@ -321,24 +331,25 @@ export function OpenPlotDetails({
           </CardHeader>
           <CardContent className="space-y-2">
             <p>
-              <strong>Survey No:</strong> {plot.surveyNo || "N/A"}
+              <strong>Survey No:</strong> {openPlotData?.surveyNo || "N/A"}
             </p>
             <p>
               <strong>Approval Authority:</strong>{" "}
-              {plot.approvalAuthority || "N/A"}
+              {openPlotData?.approvalAuthority || "N/A"}
             </p>
             <p>
-              <strong>RERA No:</strong> {plot.reraNo || "N/A"}
+              <strong>RERA No:</strong> {openPlotData?.reraNo || "N/A"}
             </p>
             <p>
-              <strong>Document No:</strong> {plot.documentNo || "N/A"}
+              <strong>Document No:</strong> {openPlotData?.documentNo || "N/A"}
             </p>
             <p>
-              <strong>Title Status:</strong> {getStatusBadge(plot.titleStatus)}
+              <strong>Title Status:</strong>{" "}
+              {getStatusBadge(openPlotData?.titleStatus)}
             </p>
             <p className="flex items-start">
               <MessageSquare className="mr-2 h-4 w-4 text-muted-foreground" />
-              {plot.remarks || "No remarks"}
+              {openPlotData?.remarks || "No remarks"}
             </p>
           </CardContent>
         </Card>
@@ -350,7 +361,7 @@ export function OpenPlotDetails({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {plot.boundaries || "No boundary information available."}
+            {openPlotData?.boundaries || "No boundary information available."}
           </CardContent>
         </Card>
       </div>
@@ -417,7 +428,7 @@ export function OpenPlotDetails({
       )}
 
       {/* Map */}
-      {plot.googleMapsLocation ? (
+      {openPlotData?.googleMapsLocation ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-xl flex items-center">
@@ -428,7 +439,7 @@ export function OpenPlotDetails({
             <iframe
               title="Plot Location"
               src={(() => {
-                const url = plot.googleMapsLocation || "";
+                const url = openPlotData?.googleMapsLocation || "";
                 if (!url) return "";
                 if (url.includes("/embed?pb=")) return url;
                 if (url.includes("/maps/place/"))
@@ -447,7 +458,9 @@ export function OpenPlotDetails({
           </CardContent>
         </Card>
       ) : (
-        <p className="text-gray-500 italic">No map available for this plot.</p>
+        <p className="text-gray-500 italic">
+          No map available for this openPlotData?.
+        </p>
       )}
 
       {/* Delete Dialog */}
@@ -496,15 +509,15 @@ export function OpenPlotDetails({
 
           if (!val) {
             queryClient.invalidateQueries({
-              queryKey: ["inner-plots", plot._id],
+              queryKey: ["inner-plots", openPlotData?._id],
             });
 
             queryClient.refetchQueries({
-              queryKey: ["inner-plots", plot._id],
+              queryKey: ["inner-plots", openPlotData?._id],
             });
           }
         }}
-        openPlotId={plot._id}
+        openPlotId={openPlotData?._id}
       />
 
       <BulkInnerPlotGenerator
@@ -514,15 +527,15 @@ export function OpenPlotDetails({
 
           if (!val) {
             queryClient.invalidateQueries({
-              queryKey: ["inner-plots", plot._id],
+              queryKey: ["inner-plots", openPlotData?._id],
             });
 
             queryClient.refetchQueries({
-              queryKey: ["inner-plots", plot._id],
+              queryKey: ["inner-plots", openPlotData?._id],
             });
           }
         }}
-        openPlotId={plot._id}
+        openPlotId={openPlotData?._id}
       />
 
       <CsvInnerPlotUploader
@@ -532,15 +545,15 @@ export function OpenPlotDetails({
 
           if (!val) {
             queryClient.invalidateQueries({
-              queryKey: ["inner-plots", plot._id],
+              queryKey: ["inner-plots", openPlotData?._id],
             });
 
             queryClient.refetchQueries({
-              queryKey: ["inner-plots", plot._id],
+              queryKey: ["inner-plots", openPlotData?._id],
             });
           }
         }}
-        openPlotId={plot._id}
+        openPlotId={openPlotData?._id}
       />
     </div>
   );

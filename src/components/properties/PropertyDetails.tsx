@@ -309,7 +309,7 @@ export function PropertyDetails({
                     {getStatusBadge(property.status)}
                   </div>
                   <p className="text-muted-foreground">
-                    Plot No. {property.plotNo} • Mem. No. {property.memNo}
+                    Flat No. {property.plotNo} • Mem. No. {property.memNo}
                   </p>
                 </div>
               </div>

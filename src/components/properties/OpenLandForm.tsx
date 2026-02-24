@@ -340,12 +340,28 @@ export default function OpenLandForm({
       });
 
       // files
+      // files
       if (thumbnailFile) formData.append("thumbnailUrl", thumbnailFile);
+
       imageFiles.forEach((file) => formData.append("images", file));
+
+      // 🔥 IMPORTANT — send only remaining old images
+      if (isEditing) {
+        const existingImages = imageUrls.filter(
+          (url) => !url.startsWith("blob:"),
+        );
+        formData.append("existingImages", JSON.stringify(existingImages));
+      }
+
+      // brochure
       if (brochureFile) formData.append("brochureUrl", brochureFile);
 
+      // brochure removed
+      if (brochureRemoved) {
+        formData.append("brochureRemoved", "true");
+      }
       // auto landSize build
-      if (data.landArea && data.areaUnit && !data.landSize) {
+      if (data?.landArea && data?.areaUnit && !data?.landSize) {
         formData.append("landSize", `${data.landArea} ${data.areaUnit}`);
       }
       if (!isEditing && !thumbnailFile) {

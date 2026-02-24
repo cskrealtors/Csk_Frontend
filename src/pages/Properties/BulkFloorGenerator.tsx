@@ -73,7 +73,7 @@ export default function BulkFloorGenerator({
   const [unitConfigs, setUnitConfigs] = useState<Record<string, UnitConfig>>(
     {},
   );
-
+  const [startFloor, setStartFloor] = useState<number>(1);
   // CREATE FLOOR
   const createFloor = async (payload: any) => {
     const { data } = await axios.post(
@@ -163,14 +163,13 @@ export default function BulkFloorGenerator({
 
   const generateMutation = useMutation({
     mutationFn: async () => {
-      for (let floor = 1; floor <= floorCount; floor++) {
+      for (let floor = startFloor; floor < startFloor + floorCount; floor++) {
         const mix = sameMix ? globalMix : perFloorMix[floor];
 
         if (!mix || !mix.length) {
           throw new Error(`Unit mix missing for floor ${floor}`);
         }
 
-        // create floor
         const floorRes = await createFloor({
           buildingId,
           floorNumber: floor,
@@ -181,18 +180,17 @@ export default function BulkFloorGenerator({
 
         const floorId = floorRes._id;
 
-        // create units
         for (const unit of mix) {
           const config = unitConfigs[unit.type];
           if (!config) {
-            throw new Error(`Configuration missing for unit type ${unit.type}`);
+            throw new Error(`Configuration missing for ${unit.type}`);
           }
 
           for (let i = 1; i <= unit.count; i++) {
             const formData = new FormData();
             formData.append("buildingId", buildingId);
             formData.append("floorId", floorId);
-            formData.append("plotNo", `${floor}-${unit.type}-${i}`);
+            formData.append("flatNo", `${floor}-${unit.type}-${i}`);
             formData.append("unitType", unit.type);
             formData.append("extent", config.sqft.toString());
             formData.append("villaFacing", config.facing);
@@ -207,15 +205,23 @@ export default function BulkFloorGenerator({
         }
       }
     },
+
     onSuccess: () => {
       toast.success("Floors & Units generated successfully");
       queryClient.invalidateQueries({ queryKey: ["floors"] });
       queryClient.invalidateQueries({ queryKey: ["units"] });
       onOpenChange(false);
     },
-    onError: () => toast.error("Bulk generation failed"),
-  });
 
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Bulk generation failed";
+
+      toast.error(message);
+    },
+  });
   const addMixRow = () => setGlobalMix((p) => [...p, { type: "", count: 1 }]);
 
   const updateMix = (i: number, key: keyof UnitMix, val: any) => {
@@ -265,7 +271,19 @@ export default function BulkFloorGenerator({
               }}
             />
           </div>
-
+          <div>
+            <Label>Start From Floor</Label>
+            <Input
+              type="number"
+              min={1}
+              value={startFloor}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (!value || value < 1) return;
+                setStartFloor(value);
+              }}
+            />
+          </div>
           <div className="flex items-center space-x-2">
             <Switch checked={sameMix} onCheckedChange={setSameMix} />
             <Label>Same unit mix for all floors</Label>
@@ -324,7 +342,7 @@ export default function BulkFloorGenerator({
                     <div key={idx} className="border rounded-lg p-4 space-y-4">
                       <h4 className="font-medium">{m.type}</h4>
                       <Input
-                        placeholder="Plot area in sqft"
+                        placeholder="Flat area in sqft"
                         type="number"
                         min={1}
                         value={config.sqft || ""}

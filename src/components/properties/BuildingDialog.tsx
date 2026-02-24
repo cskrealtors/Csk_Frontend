@@ -70,7 +70,7 @@ export const BuildingDialog = ({
   const brochureInputRef = useRef<HTMLInputElement>(null);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [amenityInput, setAmenityInput] = useState<string>("");
-
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
   useEffect(() => {
     if (!open) return;
 
@@ -210,7 +210,25 @@ export const BuildingDialog = ({
     },
     onSuccess: (data) => {
       toast.success(data?.message || "Building updated successfully");
-      resetForm();
+
+      const updated = data?.data;
+
+      if (updated?.images) {
+        setImagePreviews(updated.images);
+        setFormData((prev) => ({ ...prev, images: updated.images }));
+      }
+
+      if (updated?.thumbnailUrl) {
+        setThumbnailPreview(updated.thumbnailUrl);
+      }
+
+      if (updated?.brochureUrl) {
+        setBrochurePreview(updated.brochureUrl);
+      }
+
+      setImageFiles([]);
+      setRemovedImages([]); // 🔥 MUST RESET
+
       onSuccessfulSave();
       onOpenChange(false);
     },
@@ -218,7 +236,11 @@ export const BuildingDialog = ({
       toast.error(err.response?.data?.message || "Failed to update building.");
     },
   });
-
+  useEffect(() => {
+    if (building?.images) {
+      setImagePreviews(building.images);
+    }
+  }, [building]);
   const handleAddAmenity = () => {
     if (!amenityInput.trim()) {
       toast.error("Please enter an amenity");
@@ -360,24 +382,30 @@ export const BuildingDialog = ({
     if (mode === "add") {
       createBuilding.mutate(payload);
     } else {
+      removedImages.forEach((img) => {
+        payload.append("removedImages", img);
+      });
       updateBuilding.mutate(payload);
     }
   };
 
   const removeImage = (index: number) => {
     setImagePreviews((prev) => {
-      const newPreviews = [...prev];
-      const url = newPreviews[index];
-      if (url && url.startsWith("blob:")) {
-        URL.revokeObjectURL(url);
+      const updated = [...prev];
+      const removedUrl = updated[index];
+      if (removedUrl && !removedUrl.startsWith("blob:")) {
+        setRemovedImages((p) => [...p, removedUrl]);
       }
-      newPreviews.splice(index, 1);
-      return newPreviews;
+      if (removedUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(removedUrl);
+      }
+      updated.splice(index, 1);
+      return updated;
     });
     setImageFiles((prev) => {
-      const newFiles = [...prev];
-      newFiles.splice(index, 1);
-      return newFiles;
+      const files = [...prev];
+      files.splice(index, 1);
+      return files;
     });
   };
 
@@ -754,7 +782,7 @@ export const BuildingDialog = ({
                   ref={brochureInputRef}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file && validateFile(file, "pdf", 10)) {
+                    if (file && validateFile(file, "pdf", 100)) {
                       setBrochureFile(file);
                       if (
                         brochurePreview &&

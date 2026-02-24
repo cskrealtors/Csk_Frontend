@@ -85,6 +85,7 @@ export const ApartmentDialog = ({
   const [enquiryCustomers, setEnquiryCustomers] = useState([
     { name: "", contact: "" },
   ]);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [purchasedCustomer, setPurchasedCustomer] = useState({
     name: "",
     contact: "",
@@ -233,7 +234,11 @@ export const ApartmentDialog = ({
 
     if (thumbnailFile) payload.append("thumbnailUrl", thumbnailFile);
     imageFiles.forEach((file) => payload.append("images", file));
-
+    if (mode === "edit") {
+      removedImages.forEach((img) => {
+        payload.append("removedImages", img);
+      });
+    }
     onSave?.(payload, mode);
   };
 
@@ -247,11 +252,26 @@ export const ApartmentDialog = ({
 
   const removeGalleryImage = (index: number) => {
     setImagePreviews((prev) => {
-      const url = prev[index];
-      if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
-      return prev.filter((_, i) => i !== index);
+      const updated = [...prev];
+      const removedUrl = updated[index];
+
+      if (removedUrl && !removedUrl.startsWith("blob:")) {
+        setRemovedImages((p) => [...p, removedUrl]);
+      }
+
+      if (removedUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(removedUrl);
+      }
+
+      updated.splice(index, 1);
+      return updated;
     });
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+
+    setImageFiles((prev) => {
+      const files = [...prev];
+      files.splice(index, 1);
+      return files;
+    });
   };
 
   const handleAddEnquiry = () => {

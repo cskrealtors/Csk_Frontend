@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { saveOpenPlot, updateOpenPlot } from "@/api/openPlot.api";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,7 +29,7 @@ interface Props {
 
 export function OpenPlotForm({ openPlot, onSuccess }: Props) {
   const isEdit = !!openPlot;
-
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>(
     openPlot?.thumbnailUrl || "",
@@ -44,7 +44,7 @@ export function OpenPlotForm({ openPlot, onSuccess }: Props) {
   const [brochureName, setBrochureName] = useState<string>(
     openPlot?.brochureUrl ? "Existing brochure uploaded" : "",
   );
-
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -100,8 +100,19 @@ export function OpenPlotForm({ openPlot, onSuccess }: Props) {
   };
 
   const removeImage = (index: number) => {
-    setImagePreviews((p) => p.filter((_, i) => i !== index));
-    setImageFiles((p) => p.filter((_, i) => i !== index));
+    setImagePreviews((prev) => {
+      const updated = [...prev];
+      const removedUrl = updated[index];
+
+      if (removedUrl && !removedUrl.startsWith("blob:")) {
+        setRemovedImages((p) => [...p, removedUrl]);
+      }
+
+      updated.splice(index, 1);
+      return updated;
+    });
+
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onBrochureChange = (file?: File) => {
@@ -135,13 +146,27 @@ export function OpenPlotForm({ openPlot, onSuccess }: Props) {
             thumbnailFile ?? undefined,
             imageFiles,
             brochureFile ?? undefined,
+            removedImages,
           )
         : saveOpenPlot(data, thumbnailFile!, imageFiles, brochureFile!);
     },
-    onSuccess: () => {
+
+    onSuccess: (updatedPlot) => {
       toast.success(isEdit ? "Open plot updated" : "Open plot created");
+
+      // 🔥 THIS LINE FIXES YOUR ISSUE
+      queryClient.invalidateQueries({
+        queryKey: ["open-plot", openPlot?._id],
+      });
+
+      // optional — refresh list page
+      queryClient.invalidateQueries({
+        queryKey: ["open-plots"],
+      });
+
       onSuccess();
     },
+
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Something went wrong");
     },

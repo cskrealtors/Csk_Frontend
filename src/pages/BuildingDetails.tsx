@@ -466,74 +466,79 @@ const BuildingDetails = () => {
 
           <CardContent>
             <div className="grid gap-4">
-              {(floors || []).map((floor, idx) => (
-                <Card
-                  key={floor._id || idx}
-                  className="hover:shadow-md transition-shadow"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Home className="h-5 w-5 text-muted-foreground" />
-                            <h3 className="text-lg font-semibold">
-                              Floor {floor.floorNumber} - {floor.unitType}
-                            </h3>
-                          </div>
-                          {canEdit && (
-                            <div className="flex gap-1">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={(e) => handleEditFloor(floor, e)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={(e) => handleDeleteFloor(floor._id, e)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+              {(floors || [])
+                .slice()
+                .sort((a, b) => a.floorNumber - b.floorNumber)
+                .map((floor, idx) => (
+                  <Card
+                    key={floor._id || idx}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Home className="h-5 w-5 text-muted-foreground" />
+                              <h3 className="text-lg font-semibold">
+                                Floor {floor.floorNumber} - {floor.unitType}
+                              </h3>
                             </div>
-                          )}
+                            {canEdit && (
+                              <div className="flex gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) => handleEditFloor(floor, e)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) =>
+                                    handleDeleteFloor(floor._id, e)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                              Total Units:{" "}
+                              <span className="font-medium">
+                                {floor.totalSubUnits}
+                              </span>
+                            </div>
+                            <div>
+                              Available:{" "}
+                              <span className="font-medium text-green-600">
+                                {floor.availableSubUnits}
+                              </span>
+                            </div>
+                            <div>
+                              Sold:{" "}
+                              <span className="font-medium text-blue-600">
+                                {floor.totalSubUnits - floor.availableSubUnits}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                          <div>
-                            Total Units:{" "}
-                            <span className="font-medium">
-                              {floor.totalSubUnits}
-                            </span>
-                          </div>
-                          <div>
-                            Available:{" "}
-                            <span className="font-medium text-green-600">
-                              {floor.availableSubUnits}
-                            </span>
-                          </div>
-                          <div>
-                            Sold:{" "}
-                            <span className="font-medium text-blue-600">
-                              {floor.totalSubUnits - floor.availableSubUnits}
-                            </span>
-                          </div>
-                        </div>
+                        <Button
+                          onClick={() =>
+                            navigate(
+                              `/properties/building/${buildingId}/floor/${floor._id}`,
+                            )
+                          }
+                        >
+                          View Units
+                        </Button>
                       </div>
-                      <Button
-                        onClick={() =>
-                          navigate(
-                            `/properties/building/${buildingId}/floor/${floor._id}`,
-                          )
-                        }
-                      >
-                        View Units
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
               {(!floors || floors.length === 0) && (
                 <div className="text-center py-4">
                   <p className="text-muted-foreground">No floors found</p>

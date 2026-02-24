@@ -11,7 +11,7 @@ export const saveOpenPlot = async (
   data: OpenPlotFormValues,
   thumbnail: File,
   images: File[],
-  brochure: File, // 🔥 added
+  brochure: File
 ) => {
   const formData = new FormData();
 
@@ -22,18 +22,11 @@ export const saveOpenPlot = async (
   });
 
   formData.append("thumbnailUrl", thumbnail);
-
-  // 🔥 brochure append
   formData.append("brochureUrl", brochure);
 
   images.forEach((img) => formData.append("images", img));
 
-  const res = await api.post("/api/openPlot/saveOpenplot", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-
+  const res = await api.post("/api/openPlot/saveOpenplot", formData);
   return res.data.data;
 };
 
@@ -42,7 +35,8 @@ export const updateOpenPlot = async (
   data: OpenPlotFormValues,
   thumbnail?: File,
   images?: File[],
-  brochure?: File, // 🔥 added
+  brochure?: File,
+  removedImages?: string[]
 ) => {
   const formData = new FormData();
 
@@ -53,17 +47,14 @@ export const updateOpenPlot = async (
   });
 
   if (thumbnail) formData.append("thumbnailUrl", thumbnail);
-
-  // 🔥 brochure append
   if (brochure) formData.append("brochureUrl", brochure);
 
   images?.forEach((img) => formData.append("images", img));
 
-  const res = await api.put(`/api/openPlot/updateOpenplot/${id}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+  removedImages?.forEach((img) => {
+    formData.append("removedImages", img);
   });
 
+  const res = await api.put(`/api/openPlot/updateOpenplot/${id}`, formData);
   return res.data.data;
 };
