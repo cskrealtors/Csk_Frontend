@@ -193,12 +193,15 @@ const CarAllocation = () => {
   });
 
   // Filter team members who are not currently assigned to any vehicle
-  const unassignedTeamMembers = teamMembers?.filter((member) => {
-    return !vehicles?.some(
-      (vehicle) =>
-        vehicle.assignedTo && vehicle.assignedTo.agent._id === member._id,
-    );
-  });
+  const assignedUserIds = new Set(
+    vehicles
+      ?.filter((v) => v.assignedTo?.agent?._id)
+      .map((v) => v.assignedTo!.agent._id),
+  );
+
+  const unassignedTeamMembers = teamMembers?.filter(
+    (member) => !assignedUserIds.has(member.agentId?._id),
+  );
 
   // Update car by id
   const queryClient = useQueryClient();
@@ -411,7 +414,16 @@ const CarAllocation = () => {
       toast.error("Please select a team member and assignment end date.");
       return;
     }
+    const selectedDate = new Date(assignedUntil);
+    const today = new Date();
 
+    // Remove time portion for accurate comparison
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate <= today) {
+      toast.error("Please select a future date for assignment.");
+      return;
+    }
     // Find the full team member object for assignedTo.agent
     const selectedTeamMember = unassignedTeamMembers?.find(
       (member) => member._id === assignedTo,
@@ -980,7 +992,7 @@ const CarAllocation = () => {
                                         </SelectItem>
                                       ))
                                     ) : (
-                                      <SelectItem value="" disabled>
+                                      <SelectItem value="no-members" disabled>
                                         No unassigned team members available
                                       </SelectItem>
                                     )}

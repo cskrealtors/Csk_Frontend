@@ -796,12 +796,20 @@ const TeamManagementTable = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div className="border rounded-lg p-3 bg-muted/20">
                   <p className="font-semibold">Agent Name</p>
-                  <p>{viewData?.agentId?.name ?? "-"}</p>
+                  <p>
+                    {typeof viewData?.agentId === "object"
+                      ? (viewData?.agentId?.name ?? "-")
+                      : "-"}
+                  </p>
                 </div>
 
                 <div className="border rounded-lg p-3 bg-muted/20">
                   <p className="font-semibold">Contact</p>
-                  <p>{viewData?.agentId?.phone ?? "-"}</p>
+                  <p>
+                    {typeof viewData?.agentId === "object"
+                      ? (viewData?.agentId?.phone ?? "-")
+                      : "-"}
+                  </p>
                 </div>
 
                 <div className="border rounded-lg p-3 bg-muted/20">
@@ -841,7 +849,12 @@ const TeamManagementTable = () => {
 
                 <div className="border rounded-lg p-3 bg-muted/20">
                   <p className="font-semibold">Project</p>
-                  <p>{viewData?.project?.projectId?.projectName ?? "-"}</p>
+                  <p>
+                    {typeof viewData?.project === "object" &&
+                    typeof viewData?.project?.projectId === "object"
+                      ? (viewData?.project?.projectId?.projectName ?? "-")
+                      : "-"}
+                  </p>
                 </div>
 
                 <div className="border rounded-lg p-3 bg-muted/20">
