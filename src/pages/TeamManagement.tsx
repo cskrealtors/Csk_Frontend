@@ -146,7 +146,7 @@ const TeamManagement = () => {
     isLoading: isTeamMemLoading,
     isError: teamMemError,
     error: isTeamMemErr,
-  } = useUnAssignedAgentsDropDown();
+  } = useUnAssignedAgentsDropDown(dialogOpen);
 
   const addTeamMemberMutation = useMutation({
     mutationFn: async ({
@@ -171,6 +171,18 @@ const TeamManagement = () => {
         { withCredentials: true },
       );
       return data;
+    },
+    onSuccess: () => {
+      toast.success("Team member added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["teams", user?._id] });
+      setDialogOpen(false);
+      setIsEditing(false);
+      setEditingMember(null);
+    },
+    onError: (err: any) => {
+      const errorMessage =
+        err.response?.data?.message || "Failed to added team member.";
+      toast.error(errorMessage);
     },
   });
 
