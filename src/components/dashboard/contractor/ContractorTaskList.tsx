@@ -60,6 +60,19 @@ import {
   useTasks,
 } from "@/utils/contractor/ContractorConfig";
 
+const formatDate = (date?: string) => {
+  if (!date) return "-";
+  const d = new Date(date);
+  return isNaN(d.getTime()) ? "-" : d.toLocaleDateString();
+};
+
+const siteStatusColors: Record<string, string> = {
+  "pending verification": "bg-yellow-100 text-yellow-800",
+  approved: "bg-green-100 text-green-800",
+  rejected: "bg-red-100 text-red-800",
+  rework: "bg-orange-100 text-orange-800",
+};
+
 const ContractorTaskList = () => {
   // const [tasks, setTasks] = useState<Task[]>();
   const [filter, setFilter] = useState("all");
@@ -78,6 +91,7 @@ const ContractorTaskList = () => {
   const [editTaskOpen, setEditTaskOpen] = useState(false);
   const [isSelectingFiles, setIsSelectingFiles] = useState(false);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
+  const [removedPhotos, setRemovedPhotos] = useState<string[]>([]);
 
   const {
     data: tasks,
@@ -89,18 +103,12 @@ const ContractorTaskList = () => {
 
   useEffect(() => {
     if (selectedTask) {
-      setEvidenceTitle(selectedTask.evidenceTitle || "");
+      setEvidenceTitle(selectedTask.evidenceTitleByContractor || "");
       setSelectedPhase(selectedTask.phase || "");
       setProgress(selectedTask.progress || 0);
       setStatus(selectedTask.status ?? "pending_review");
     }
   }, [selectedTask]);
-
-  useEffect(() => {
-    if (uploadEvidenceOpen && selectedTask?.contractorUploadedPhotos) {
-      setExistingPhotos(selectedTask.contractorUploadedPhotos);
-    }
-  }, [uploadEvidenceOpen, selectedTask]);
 
   const previewUrls = useMemo(
     () => photos.map((file) => URL.createObjectURL(file)),
@@ -173,19 +181,23 @@ const ContractorTaskList = () => {
       setIsUpdating(false);
       return;
     }
-    const finalPhotos = [...existingPhotos, ...uploadedImageUrls];
-    // 2. Create new task object
+
     const newTask = {
       evidenceTitleByContractor: evidenceTitle,
       status,
       progressPercentage: progress,
-      photos: finalPhotos,
+      photos: uploadedImageUrls, // new uploads
+      removePhotos: removedPhotos, // 🔥 removed ones
       constructionPhase: selectedPhase,
       shouldSubmit,
     };
 
     // 3. Send inspection data to backend
     try {
+      if (!selectedTask?._id || !selectedTask?.projectId) {
+        toast.error("Invalid task data");
+        return;
+      }
       await axios.patch(
         `${import.meta.env.VITE_URL}/api/project/contractor/${
           selectedTask.projectId
@@ -205,6 +217,7 @@ const ContractorTaskList = () => {
       setEvidenceTitle("");
       setPhotos([]);
       setProgress(0);
+      setRemovedPhotos([]);
       setSelectedPhase("");
     }
   };
@@ -240,14 +253,18 @@ const ContractorTaskList = () => {
 
   let filteredTasks = [];
   if (tasks) {
-    filteredTasks = tasks.filter((task) => {
-      if (filter !== "all" && task.status !== filter) {
+    filteredTasks = (tasks || []).filter((task) => {
+      if (!task) return false;
+
+      if (filter !== "all" && task?.status !== filter) {
         return false;
       }
 
       if (
         searchQuery &&
-        !task.title.toLowerCase().includes(searchQuery.toLowerCase())
+        !String(task?.title || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
       ) {
         return false;
       }
@@ -257,17 +274,25 @@ const ContractorTaskList = () => {
   }
 
   const handleUploadEvidence = (task: Task) => {
-    console.log("TASK RECEIVED:", task);
-    console.log("PHOTOS FIELD:", task.contractorUploadedPhotos);
     setSelectedTask(task);
     setPhotos([]);
+    setRemovedPhotos([]);
+    setExistingPhotos(
+      Array.isArray(task?.contractorUploadedPhotos)
+        ? [...task.contractorUploadedPhotos]
+        : [],
+    );
     setProgress(task.progress || 0);
     setStatus(task.status ?? "pending_review");
     setUploadEvidenceOpen(true);
   };
 
-  if (!tasks || taskLoading) return <div>Loading tasks...</div>;
-  if (tasks.length === 0) return <div>No tasks.</div>;
+  if (taskLoading) return <div>Loading tasks...</div>;
+
+  if (!Array.isArray(tasks)) return <div>Unable to load tasks.</div>;
+
+  if (tasks.length === 0) return <div>No tasks available.</div>;
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -369,9 +394,7 @@ const ContractorTaskList = () => {
                           ?.replace(/\b\w/g, (c) => c.toUpperCase())}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {new Date(task.deadline).toLocaleDateString()}
-                    </TableCell>
+                    <TableCell>{formatDate(task?.deadline)}</TableCell>
                     <TableCell>
                       {task.progress !== undefined ? `${task.progress}%` : "-"}
                     </TableCell>
@@ -466,42 +489,49 @@ const ContractorTaskList = () => {
         <div className="space-y-4 lg:hidden block">
           {filteredTasks.map((task, idx) => (
             <div
-              key={task._id || idx}
+              key={task?._id || idx}
               className="border rounded-md p-4 shadow-sm bg-white"
             >
               {/* Task Title */}
               <div className="flex justify-between items-start">
-                <h3 className="font-medium text-lg">{task.title}</h3>
-                <Badge variant="outline" className={statusColors[task.status]}>
-                  {task.status}
+                <h3 className="font-medium text-lg">{task?.title || "-"}</h3>
+                <Badge
+                  variant="outline"
+                  className={
+                    statusColors[task?.status] || "bg-gray-100 text-gray-800"
+                  }
+                >
+                  {task?.status || "-"}
                 </Badge>
               </div>
 
               {/* Project / Unit */}
               <p className="text-sm text-gray-500 mt-1">
-                {task.project} / {task.unit}
+                {task?.project || "-"} / {task?.unit || "-"}
               </p>
 
               {/* Phase & Priority */}
               <div className="flex justify-between mt-2">
-                <span className="text-sm text-gray-600">{task.phase}</span>
+                <span className="text-sm text-gray-600">
+                  {task?.phase || "-"}
+                </span>
                 <Badge
                   variant="outline"
-                  className={priorityColors[task.priority]}
+                  className={priorityColors[task?.priority]}
                 >
-                  {task.priority.charAt(0).toUpperCase() +
-                    task.priority.slice(1)}
+                  {task?.priority?.charAt(0).toUpperCase() +
+                    task?.priority?.slice(1)}
                 </Badge>
               </div>
 
               {/* Deadline & Progress */}
               <div className="flex justify-between mt-2 text-sm text-gray-500">
-                <span>
-                  Deadline: {new Date(task.deadline).toLocaleDateString()}
-                </span>
+                <span>Deadline: {formatDate(task?.deadline)}</span>
                 <span>
                   Progress:{" "}
-                  {task.progress !== undefined ? `${task.progress}%` : "-"}
+                  {task?.progress !== undefined
+                    ? `${task?.progress ?? 0}%`
+                    : "-"}
                 </span>
               </div>
 
@@ -690,25 +720,41 @@ const ContractorTaskList = () => {
                 {/* Existing uploaded photos */}
                 {existingPhotos.map((url, index) => (
                   <div
-                    key={`existing-${index}`}
-                    className="relative rounded-md overflow-hidden border h-32"
+                    key={`${url}-${index}`}
+                    className="relative rounded-md overflow-hidden border h-32 group"
                   >
                     <img
                       src={url}
                       alt={`Uploaded ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-1 right-1 bg-black/60 hover:bg-black/80 rounded-full"
+                      onClick={() => {
+                        setExistingPhotos((prev) =>
+                          prev.filter((_, i) => i !== index),
+                        );
+
+                        setRemovedPhotos((prev) => [...prev, url]);
+                      }}
+                    >
+                      <XCircle className="h-4 w-4 text-white" />
+                    </Button>
                   </div>
                 ))}
 
-                {/* Newly selected photos (instant preview) */}
-                {photos.map((file, index) => (
+                {/* Newly selected photos */}
+                {previewUrls.map((previewUrl, index) => (
                   <div
                     key={`new-${index}`}
                     className="relative rounded-md overflow-hidden border h-32 group"
                   >
                     <img
-                      src={URL.createObjectURL(file)}
+                      src={previewUrl}
                       alt={`New ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -770,6 +816,7 @@ const ContractorTaskList = () => {
                 setIsUpdating(false);
                 setStatus("");
                 setEvidenceTitle("");
+                setRemovedPhotos([]);
                 setPhotos([]);
                 setProgress(0);
                 setSelectedPhase("");
@@ -811,10 +858,10 @@ const ContractorTaskList = () => {
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-xl font-bold">
-                  {selectedTask && selectedTask.title}
+                  {selectedTask?.title || "-"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedTask && selectedTask.phase}
+                  {selectedTask?.phase || "No phase provided."}
                 </p>
               </div>
               {selectedTask && (
@@ -842,11 +889,82 @@ const ContractorTaskList = () => {
               <div>
                 <p className="text-muted-foreground">Project / Unit:</p>
                 <p>
-                  {(selectedTask && selectedTask.project) || "-"} /{" "}
+                  {(selectedTask && selectedTask?.project) || "-"} /{" "}
                   {(selectedTask &&
                     selectedTask?.plotNo + "/" + selectedTask?.floorNumber) ||
                     "-"}
                 </p>
+              </div>
+              <div className="col-span-2 md:col-span-3 space-y-4">
+                <Separator />
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  {/* Site Incharge Name */}
+                  <div>
+                    <p className="text-muted-foreground">Site Incharge</p>
+                    <p className="font-medium">
+                      {selectedTask?.siteInchargeName || "-"}
+                    </p>
+                  </div>
+
+                  {/* Site Incharge Status */}
+                  <div>
+                    <p className="text-muted-foreground">
+                      Site Incharge Status
+                    </p>
+                    <Badge
+                      className={
+                        siteStatusColors[
+                          selectedTask?.statusForSiteIncharge || ""
+                        ] || "bg-gray-100 text-gray-800"
+                      }
+                    >
+                      {selectedTask?.statusForSiteIncharge
+                        ? selectedTask.statusForSiteIncharge
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())
+                        : "-"}
+                    </Badge>
+                  </div>
+
+                  {/* Verification Decision */}
+                  <div>
+                    <p className="text-muted-foreground">
+                      Verification Decision
+                    </p>
+                    <p>
+                      {selectedTask?.verificationDecision
+                        ? selectedTask.verificationDecision
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())
+                        : "-"}
+                    </p>
+                  </div>
+
+                  {/* Quality Assessment */}
+                  <div>
+                    <p className="text-muted-foreground">Quality Assessment</p>
+                    <p>
+                      {selectedTask?.qualityAssessment
+                        ? selectedTask.qualityAssessment
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())
+                        : "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Site Incharge Note */}
+                {selectedTask?.noteBySiteIncharge && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Site Incharge Note:
+                    </p>
+                    <p className="mt-1 p-3 bg-gray-50 rounded-md border">
+                      {selectedTask.noteBySiteIncharge}
+                    </p>
+                  </div>
+                )}
               </div>
               <div>
                 <p className="text-muted-foreground">Deadline:</p>

@@ -57,29 +57,50 @@ export const statusOptions = ["pending_review", "in_progress", "completed"];
 
 export interface Task {
   id: string;
+  _id: string;
+
   title: string;
   project: string;
   projectId: string;
-  _id: string;
+
   unit: string;
-  phase: string;
   floorNumber: string;
   plotNo: string;
+
+  phase: string;
+
   status:
-    | "pending verification"
     | "in_progress"
     | "completed"
+    | "pending_review"
+    | "pending verification"
     | "approved"
     | "rejected"
-    | "pending_review";
+    | "rework";
+
   deadline: string;
-  priority: "high" | "medium" | "low";
+
+  priority: "high" | "medium" | "low" | "unspecified";
+
   progress?: number;
+
   hasEvidence?: boolean;
-  evidenceTitle: string;
+
+  // 🔥 Add this
+  evidenceTitleByContractor?: string;
+
   contractorUploadedPhotos: string[];
-  statusForContractor: string;
-  noteBySiteIncharge: string;
+
+  statusForContractor?: string;
+  statusForSiteIncharge?: string;
+
+  noteBySiteIncharge?: string;
+
+  // 🔥 Add this
+  siteInchargeName?: string;
+
+  verificationDecision?: string;
+  qualityAssessment?: string;
 }
 
 export interface VerificationTask {
@@ -122,26 +143,52 @@ export const fetchTasks = async () => {
     `${import.meta.env.VITE_URL}/api/project/tasks`,
     { withCredentials: true },
   );
+
+  if (!Array.isArray(response?.data)) return [];
+
   const mapped = response.data.map((task: any, index: number) => ({
     id: index.toString(),
-    title: task.taskTitle,
-    project: task.projectName,
-    unit: task.unit,
-    floorNumber: task.floorNumber,
-    plotNo: task.plotNo,
-    phase: task.constructionPhase,
-    status: mapStatus(task.status),
-    deadline: task.deadline,
-    progress: task.progress,
-    priority: mapPriority(task.priority),
 
-    // ✅ ADD THIS
-    contractorUploadedPhotos: task.contractorUploadedPhotos || [],
+    title: task?.taskTitle || "-",
+    project: task?.projectName || "-",
+    unit: task?.unit || "-",
+    floorNumber: task?.floorNumber ?? "-",
+    plotNo: task?.plotNo || "-",
 
-    hasEvidence: task.contractorUploadedPhotos?.length > 0,
-    _id: task._id,
-    projectId: task.projectId,
+    phase: task?.constructionPhase || "-",
+
+    status: mapStatus(task?.status || "in_progress"),
+
+    deadline: task?.deadline || null,
+
+    progress: typeof task?.progress === "number" ? task.progress : 0,
+
+    priority: mapPriority(task?.priority || "unspecified"),
+
+    siteInchargeName: task?.siteInchargeName || "-",
+
+    // 🔥 ADD THESE (VERY IMPORTANT)
+    statusForSiteIncharge: task?.statusForSiteIncharge || "",
+    verificationDecision: task?.verificationDecision || "",
+    qualityAssessment: task?.qualityAssessment || "",
+    noteBySiteIncharge: task?.noteBySiteIncharge || "",
+
+    contractorUploadedPhotos: Array.isArray(task?.contractorUploadedPhotos)
+      ? task.contractorUploadedPhotos
+      : [],
+
+    siteInchargeUploadedPhotos: Array.isArray(task?.siteInchargeUploadedPhotos)
+      ? task.siteInchargeUploadedPhotos
+      : [],
+
+    hasEvidence:
+      Array.isArray(task?.contractorUploadedPhotos) &&
+      task.contractorUploadedPhotos.length > 0,
+
+    _id: task?._id || "",
+    projectId: task?.projectId || "",
   }));
+
   return mapped;
 };
 

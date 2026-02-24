@@ -40,6 +40,7 @@ import {
   Edit,
   Trash2,
   Eye,
+  Loader2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -78,6 +79,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ContractorList } from "@/types/contractor";
 import ViewContractorDetailsCard from "@/components/helpers/ViewContractorDetailsCard";
 import { DeleteConfirmDialog } from "@/components/properties/DeleteConfirmDialog";
+import CircleLoader from "@/components/CircleLoader";
 
 const ContractorsList = () => {
   const { user } = useAuth();
@@ -281,7 +283,7 @@ const ContractorsList = () => {
       contractorListError?.message ?? "Error fetching contractor projects",
     );
   }
-  if (isLoadingProjects || isLoadingContractors) return <Loader />;
+  if (isLoadingProjects || isLoadingContractors) return <CircleLoader />;
 
   const specializations = Array.from(
     new Set(contractors.map((c) => c.specialization)),
