@@ -428,12 +428,17 @@ const NewProperties = () => {
   };
 
   const handleOpenLandSubmit = (savedLand: OpenLand) => {
-    // just update UI — DO NOT call API again
+    queryClient.setQueryData<OpenLand[]>(["openLand"], (old = []) => {
+      const exists = old.some((l) => l._id === savedLand._id);
 
-    queryClient.setQueryData<OpenLand[]>(["openLand"], (old = []) => [
-      savedLand,
-      ...old,
-    ]);
+      if (exists) {
+        // update case
+        return old.map((l) => (l._id === savedLand._id ? savedLand : l));
+      }
+
+      // create case
+      return [savedLand, ...old];
+    });
 
     setCurrentOpenLand(savedLand);
     setSelectedOpenLand(savedLand);
