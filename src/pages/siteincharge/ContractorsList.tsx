@@ -309,6 +309,8 @@ const ContractorsList = () => {
     setViewOpen(true);
   };
 
+  console.log("contracot", selectedContractor);
+
   return (
     <MainLayout>
       <div className="space-y-6 md:p-8 p-2">
@@ -1459,36 +1461,136 @@ const ContractorsList = () => {
                     {contractorTasks.map((task, index) => (
                       <Card
                         key={task?._id || index}
-                        className="border rounded-lg shadow-sm p-4"
+                        className="border rounded-xl shadow-sm p-5"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                          <div className="space-y-1">
-                            <h4 className="font-semibold">{task?.title}</h4>
-                            <p className="text-sm text-muted-foreground">
+                        <div className="flex flex-col gap-3">
+                          {/* 🔹 Title + Status */}
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="text-lg font-semibold">
+                                {task?.taskTitle || "Untitled Task"}
+                              </h4>
+                              <p className="text-xs text-muted-foreground">
+                                Phase: {task?.constructionPhase || "N/A"}
+                              </p>
+                            </div>
+
+                            <Badge
+                              variant="outline"
+                              className={`capitalize ${
+                                task?.status === "completed"
+                                  ? "bg-green-100 text-green-700"
+                                  : task?.status === "rework"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-amber-100 text-amber-700"
+                              }`}
+                            >
+                              {task?.status}
+                            </Badge>
+                          </div>
+
+                          {/* 🔹 Project Info */}
+                          <div className="text-sm text-muted-foreground grid grid-cols-2 gap-y-1">
+                            <p>
                               <strong>Project:</strong> {task?.projectName}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              <strong>floorNumber:</strong> {task?.floorNumber}
+                            <p>
+                              <strong>Floor:</strong>{" "}
+                              {task?.floorNumber ?? "N/A"}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              <strong>unitType:</strong> {task?.unitType}
+                            <p>
+                              <strong>Unit Type:</strong>{" "}
+                              {task?.unitType ?? "N/A"}
                             </p>
-                            <p className="text-sm">
-                              <strong>priority:</strong>{" "}
-                              <Badge variant="outline" className="capitalize">
-                                {task?.priority}
-                              </Badge>
+                            <p>
+                              <strong>Unit:</strong> {task?.plotNo} (
+                              {task?.propertyType ? task?.propertyType : "N/A"})
                             </p>
                           </div>
-                          <div className="mt-3 sm:mt-0 w-full sm:w-48">
+
+                          {/* 🔹 Description */}
+                          {task?.description && (
+                            <div className="text-sm bg-gray-50 p-3 rounded-md">
+                              {task?.description}
+                            </div>
+                          )}
+
+                          {/* 🔹 Priority + Deadline */}
+                          <div className="flex flex-wrap gap-4 text-sm">
+                            <div>
+                              <strong>Priority:</strong>{" "}
+                              <Badge variant="outline" className="capitalize">
+                                {task?.priority || "unspecified"}
+                              </Badge>
+                            </div>
+
+                            <div>
+                              <strong>Deadline:</strong>{" "}
+                              {task?.deadline
+                                ? new Date(task?.deadline)?.toLocaleDateString()
+                                : "N/A"}
+                            </div>
+                          </div>
+
+                          {/* 🔹 Submission Dates */}
+                          <div className="text-xs text-muted-foreground flex flex-wrap gap-4">
+                            {task?.submittedByContractorOn && (
+                              <p>
+                                Contractor Submitted:{" "}
+                                {new Date(
+                                  task?.submittedByContractorOn,
+                                )?.toLocaleDateString()}
+                              </p>
+                            )}
+                            {task?.submittedBySiteInchargeOn && (
+                              <p>
+                                Verified On:{" "}
+                                {new Date(
+                                  task?.submittedBySiteInchargeOn,
+                                )?.toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* 🔹 Progress */}
+                          <div>
                             <Progress
-                              value={task.progressPercentage}
+                              value={task?.progressPercentage || 0}
                               className="h-2"
                             />
                             <div className="text-right text-xs mt-1">
-                              {task.progressPercentage}% Complete
+                              {task?.progressPercentage || 0}% Complete
                             </div>
                           </div>
+
+                          {/* 🔹 Uploaded Photos Count */}
+                          {task?.contractorUploadedPhotos?.length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-sm font-medium mb-2">
+                                Evidence Photos
+                              </p>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {task.contractorUploadedPhotos.map(
+                                  (photo, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="rounded-lg overflow-hidden border shadow-sm hover:scale-105 transition-transform duration-200"
+                                    >
+                                      <img
+                                        src={photo}
+                                        alt={`evidence-${idx}`}
+                                        className="w-full h-28 object-cover cursor-pointer"
+                                        onClick={() =>
+                                          window.open(photo, "_blank")
+                                        }
+                                      />
+                                    </div>
+                                  ),
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </Card>
                     ))}

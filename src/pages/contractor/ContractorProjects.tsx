@@ -179,7 +179,11 @@ const ContractorProjects = () => {
       setFormErrors({});
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to create project");
+      toast.error(
+        axios.isAxiosError(err)
+          ? err.response?.data?.message || err.message
+          : "Failed to create project",
+      );
       console.log("Failed to create project", err);
     },
   });
@@ -224,7 +228,9 @@ const ContractorProjects = () => {
   if (projectError) {
     console.log("Failed to load projects. Please try again.");
     toast.error(
-      projectErr.message || "Failed to load projects. Please try again.",
+      axios.isAxiosError(projectErr)
+        ? projectErr.response?.data?.message || projectErr.message
+        : "An unexpected error occurred while loading projects",
     );
     return null;
   }

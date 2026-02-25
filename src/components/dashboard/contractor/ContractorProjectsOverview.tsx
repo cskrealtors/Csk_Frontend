@@ -20,17 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+
 interface ContractorProjectsOverviewProps {
   projects?: Project[];
   isLoading?: boolean;
@@ -178,7 +168,9 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
               <div className="flex items-center justify-between pr-10">
                 <h2 className="text-xl font-semibold">
                   {typeof project.projectId === "object"
-                    ? project.projectId?.projectName
+                    ? `${project.projectId?.projectName || "Untitled Project"} 
+       - Floor ${typeof project.floorUnit === "object" ? (project.floorUnit?.floorNumber ?? "N/A") : (project.floorUnit ?? "N/A")} 
+       - Unit ${typeof project.unit === "object" ? (project.unit?.plotNo ?? "N/A") : (project.unit ?? "N/A")}`
                     : "Untitled Project"}
                 </h2>
 
@@ -195,7 +187,7 @@ const ContractorProjectsOverview: React.FC<ContractorProjectsOverviewProps> = ({
               </div>
 
               {/* Progress */}
-              <div className="mt-4 space-y-2">
+              <div className="my-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Overall Progress</span>
                   <span className="text-muted-foreground">
