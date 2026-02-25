@@ -100,7 +100,7 @@ export default function BulkCsvUploader({
         headers: { "Content-Type": "multipart/form-data" },
       },
     );
-    return data.data;
+    return data?.data;
   };
 
   const generateMutation = useMutation({
@@ -118,22 +118,36 @@ export default function BulkCsvUploader({
       for (const floorNumber of Object.keys(grouped)) {
         const mix = grouped[Number(floorNumber)];
 
-        const floorRes = await createFloor({
-          buildingId,
-          floorNumber: Number(floorNumber),
-          unitType: "Mixed",
-          totalSubUnits: mix.reduce((a, b) => a + b.unitCount, 0),
-          availableSubUnits: mix.reduce((a, b) => a + b.unitCount, 0),
-        });
+        let floorRes;
+
+        try {
+          floorRes = await createFloor({
+            buildingId,
+            floorNumber: Number(floorNumber),
+            unitType: "Mixed",
+            totalSubUnits: mix.reduce((a, b) => a + b.unitCount, 0),
+            availableSubUnits: mix.reduce((a, b) => a + b.unitCount, 0),
+          });
+        } catch (err: any) {
+          const msg =
+            err?.response?.data?.message ||
+            `Floor ${floorNumber} creation failed`;
+
+          toast.error(msg);
+          continue; // skip this floor, continue others
+        }
 
         const floorId = floorRes._id;
-
         for (const unit of mix) {
           for (let i = 1; i <= unit.unitCount; i++) {
             const formData = new FormData();
             formData.append("buildingId", buildingId);
             formData.append("floorId", floorId);
-            formData.append("plotNo", `${floorNumber}-${unit.unitType}-${i}`);
+            // formData.append("flatNo", `${floorNumber}-${unit.unitType}-${i}`);
+            const unitNumber = `${floorNumber}-${unit.unitType}-${i}`;
+
+            formData.append("plotNo", unitNumber); // REQUIRED for backend
+            formData.append("flatNo", unitNumber); // optional UI naming
             formData.append("unitType", unit.unitType);
             formData.append("extent", unit.sqft.toString());
             formData.append("villaFacing", unit.facing);
@@ -150,7 +164,15 @@ export default function BulkCsvUploader({
       queryClient.invalidateQueries({ queryKey: ["units"] });
       onOpenChange(false);
     },
-    onError: (err: any) => toast.error(err.message || "CSV generation failed"),
+    onError: (err: any) => {
+      const apiMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "CSV generation failed";
+
+      toast.error(apiMessage);
+    },
   });
 
   return (

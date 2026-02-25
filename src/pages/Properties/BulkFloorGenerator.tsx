@@ -190,7 +190,11 @@ export default function BulkFloorGenerator({
             const formData = new FormData();
             formData.append("buildingId", buildingId);
             formData.append("floorId", floorId);
-            formData.append("flatNo", `${floor}-${unit.type}-${i}`);
+            // formData.append("flatNo", `${floor}-${unit.type}-${i}`);
+            const unitNumber = `${floor}-${unit.type}-${i}`;
+
+            formData.append("plotNo", unitNumber); // REQUIRED for backend
+            formData.append("flatNo", unitNumber); // optional UI naming
             formData.append("unitType", unit.type);
             formData.append("extent", config.sqft.toString());
             formData.append("villaFacing", config.facing);
