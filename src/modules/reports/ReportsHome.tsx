@@ -28,7 +28,7 @@ const reportConfigs: ReportConfig[] = [
     description: "Revenue & availability analysis",
     icon: Building2,
     category: "Business",
-    roles: ["admin", "owner", "sales_manager", "team_lead", "accountant"],
+    roles: ["admin", "owner", "sales_manager", "accountant"],
     columns: [],
   },
   {

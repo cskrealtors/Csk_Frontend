@@ -19,8 +19,8 @@ const mockData: SalesManagerReportRow[] = [
     period: "Jan 2025",
     bookings: 145,
     dealsWon: 98,
-    revenue: 425000000,
-    avgDealSize: 4336735,
+    // revenue: 425000000,
+    // avgDealSize: 4336735,
   },
   {
     managerId: "2",
@@ -28,8 +28,8 @@ const mockData: SalesManagerReportRow[] = [
     period: "Jan 2025",
     bookings: 132,
     dealsWon: 85,
-    revenue: 378000000,
-    avgDealSize: 4447059,
+    // revenue: 378000000,
+    // avgDealSize: 4447059,
   },
   {
     managerId: "1",
@@ -37,8 +37,8 @@ const mockData: SalesManagerReportRow[] = [
     period: "Feb 2025",
     bookings: 158,
     dealsWon: 105,
-    revenue: 468000000,
-    avgDealSize: 4457143,
+    // revenue: 468000000,
+    // avgDealSize: 4457143,
   },
 ];
 
@@ -52,8 +52,8 @@ export default function SalesManagersReport() {
 
   const totalBookings = mockData.reduce((sum, row) => sum + row.bookings, 0);
   const totalDeals = mockData.reduce((sum, row) => sum + row.dealsWon, 0);
-  const totalRevenue = mockData.reduce((sum, row) => sum + row.revenue, 0);
-  const avgDealSize = totalRevenue / totalDeals;
+  // const totalRevenue = mockData.reduce((sum, row) => sum + row.revenue, 0);
+  // const avgDealSize = totalRevenue / totalDeals;
 
   const metrics = [
     {
@@ -68,18 +68,18 @@ export default function SalesManagersReport() {
       format: "number" as const,
       trend: { value: 18.2, isPositive: true },
     },
-    {
-      label: "Total Revenue",
-      value: totalRevenue,
-      format: "currency" as const,
-      trend: { value: 22.5, isPositive: true },
-    },
-    {
-      label: "Avg Deal Size",
-      value: avgDealSize,
-      format: "currency" as const,
-      trend: { value: 5.3, isPositive: true },
-    },
+    // {
+    //   label: "Total Revenue",
+    //   value: totalRevenue,
+    //   format: "currency" as const,
+    //   trend: { value: 22.5, isPositive: true },
+    // },
+    // {
+    //   label: "Avg Deal Size",
+    //   value: avgDealSize,
+    //   format: "currency" as const,
+    //   trend: { value: 5.3, isPositive: true },
+    // },
   ];
 
   return (

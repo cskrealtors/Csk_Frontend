@@ -2,15 +2,12 @@ import { ColumnConfig, ReportType } from "../types";
 
 export const reportColumns: Record<ReportType, ColumnConfig[]> = {
   properties: [
-    { key: "period", header: "Period", align: "left" },
+    { key: "date", header: "date", align: "left" },
     { key: "propertyName", header: "Property", align: "left" },
     { key: "totalUnits", header: "Total Units", format: "number", align: "right" },
     { key: "soldUnits", header: "Sold Units", format: "number", align: "right" },
     { key: "availableUnits", header: "Available Units", format: "number", align: "right" },
-    { key: "sellThroughPercent", header: "Sell-Through %", format: "percent", align: "right" },
-    { key: "bookings", header: "Bookings", format: "number", align: "right" },
-    { key: "revenue", header: "Revenue", format: "currency", align: "right" },
-    { key: "avgDealSize", header: "Avg Deal", format: "currency", align: "right" },
+    { key: "enquiries", header: "Enquiries", format: "number", align: "right" },
   ],
   "users-access": [
     { key: "timestamp", header: "Timestamp", format: "date", align: "left" },
@@ -21,7 +18,7 @@ export const reportColumns: Record<ReportType, ColumnConfig[]> = {
     { key: "userAgent", header: "User Agent", align: "left" },
   ],
   agents: [
-    { key: "period", header: "Period", align: "left" },
+    { key: "date", header: "date", align: "left" },
     { key: "agentName", header: "Agent Name", align: "left" },
     { key: "leadsAdded", header: "Leads Added", format: "number", align: "right" },
     { key: "enquiries", header: "Enquiries", format: "number", align: "right" },
@@ -30,18 +27,18 @@ export const reportColumns: Record<ReportType, ColumnConfig[]> = {
     { key: "conversionRate", header: "Conversion Rate", format: "percent", align: "right" },
   ],
   "team-leads": [
-    { key: "period", header: "Period", align: "left" },
+    { key: "date", header: "date", align: "left" },
     { key: "teamLeadName", header: "Team Lead", align: "left" },
     { key: "teamMembers", header: "Team Members", format: "number", align: "right" },
     { key: "leadsClosed", header: "Leads Closed", format: "number", align: "right" },
     { key: "siteBookingsApproved", header: "Bookings Approved", format: "number", align: "right" },
     { key: "siteBookingsRejected", header: "Bookings Rejected", format: "number", align: "right" },
-    { key: "incentivesToDate", header: "Incentives Earned", format: "currency", align: "right" },
+    { key: "incentivesTodate", header: "Incentives Earned", format: "currency", align: "right" },
     { key: "trips", header: "Trips", format: "number", align: "right" },
     { key: "kms", header: "KMs", format: "number", align: "right" },
   ],
   "sales-managers": [
-    { key: "period", header: "Period", align: "left" },
+    { key: "date", header: "date", align: "left" },
     { key: "managerName", header: "Manager Name", align: "left" },
     { key: "bookings", header: "Bookings", format: "number", align: "right" },
     { key: "dealsWon", header: "Deals Won", format: "number", align: "right" },
@@ -49,7 +46,7 @@ export const reportColumns: Record<ReportType, ColumnConfig[]> = {
     { key: "avgDealSize", header: "Avg Deal Size", format: "currency", align: "right" },
   ],
   contractors: [
-    { key: "period", header: "Period", align: "left" },
+    { key: "date", header: "date", align: "left" },
     { key: "contractorName", header: "Contractor", align: "left" },
     { key: "tasksCreated", header: "Tasks Created", format: "number", align: "right" },
     { key: "tasksApproved", header: "Tasks Approved", format: "number", align: "right" },
@@ -59,7 +56,7 @@ export const reportColumns: Record<ReportType, ColumnConfig[]> = {
     { key: "avgProgressPercent", header: "Avg Progress", format: "percent", align: "right" },
   ],
   "site-incharge": [
-    { key: "period", header: "Period", align: "left" },
+    { key: "date", header: "date", align: "left" },
     { key: "name", header: "Site In-Charge", align: "left" },
     { key: "projectsActive", header: "Active Projects", format: "number", align: "right" },
     { key: "qcTasksCreated", header: "QC Tasks", format: "number", align: "right" },
@@ -68,7 +65,7 @@ export const reportColumns: Record<ReportType, ColumnConfig[]> = {
     { key: "avgProgressPercent", header: "Avg Progress", format: "percent", align: "right" },
   ],
   accounting: [
-    { key: "period", header: "Period", align: "left" },
+    { key: "date", header: "date", align: "left" },
     { key: "revenueTotal", header: "Total Revenue", format: "currency", align: "right" },
     { key: "invoicesReceived", header: "Invoices Received", format: "number", align: "right" },
     { key: "invoicesApproved", header: "Invoices Approved", format: "number", align: "right" },
