@@ -33,13 +33,17 @@ import { ToastAction } from "@/components/ui/toast"; // Assuming this path is co
 
 // Defines the shape of our form data
 interface FormData {
-  propertyType: "villa" | "apartment" | "plot" | "commercial" | "";
+  propertyType: "villa" | "apartment" | "plot" | "land" | "";
+  propertySource: "building" | "openplot" | "openland" | "";
+  propertyId: string;
+  project: string;
+
   budget: string;
   name: string;
   email: string;
   phone: string;
   message: string;
-  otp: string; // Added OTP field
+  otp: string;
 }
 
 // Defines the structure for our visual assets map
@@ -73,7 +77,7 @@ const propertyVisuals: PropertyVisuals = {
     image:
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2400&auto=format&fit=crop",
   },
-  commercial: {
+  land: {
     icon: <Handshake className="h-8 w-8 text-white" />,
     image:
       "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2400&auto=format&fit=crop",
@@ -98,6 +102,9 @@ const ModernEnquiryForm: React.FC = () => {
 
   const [formData, setFormData] = useState<FormData>({
     propertyType: "",
+    propertySource: "",
+    propertyId: "",
+    project: "",
     budget: "",
     name: "",
     email: "",
@@ -113,11 +120,61 @@ const ModernEnquiryForm: React.FC = () => {
     email: "",
     workingHours: "",
   });
+  const [projects, setProjects] = useState<any[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
+  const fetchProjectsByType = async (type: string) => {
+    try {
+      setProjectsLoading(true);
+
+      let url = "";
+      let source: FormData["propertySource"] = "";
+
+      if (type === "villa" || type === "apartment") {
+        url = "/api/building/getAllBuildings";
+        source = "building";
+      }
+
+      if (type === "plot") {
+        url = "/api/openPlot/getAllOpenPlot";
+        source = "openplot";
+      }
+
+      if (type === "land") {
+        url = "/api/openLand/getAllOpenLand";
+        source = "openland";
+      }
+
+      const res = await axios.get(`${import.meta.env.VITE_URL}${url}`);
+
+      const apiData = res.data;
+
+      // 🔥 normalize backend responses
+      const normalized =
+        apiData?.data ||
+        apiData?.buildings ||
+        apiData?.plots ||
+        apiData?.lands ||
+        apiData ||
+        [];
+
+      setProjects(Array.isArray(normalized) ? normalized : []);
+
+      setFormData((p) => ({
+        ...p,
+        propertySource: source,
+      }));
+    } catch (err) {
+      console.error("project load error", err);
+      setProjects([]);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
   const fetchContactInfo = async () => {
     try {
       const { data } = await axios.get(
-        `${import.meta.env.VITE_URL}/api/contact/contactInfo`
+        `${import.meta.env.VITE_URL}/api/contact/contactInfo`,
       );
       setContact(data);
     } catch (error) {
@@ -152,7 +209,14 @@ const ModernEnquiryForm: React.FC = () => {
   };
 
   const handlePropertyTypeChange = (value: FormData["propertyType"]) => {
-    setFormData((prev) => ({ ...prev, propertyType: value }));
+    setFormData((prev) => ({
+      ...prev,
+      propertyType: value,
+      propertyId: "",
+      project: "",
+    }));
+
+    fetchProjectsByType(value);
   };
 
   const handleNextStep = (): void => {
@@ -220,7 +284,7 @@ const ModernEnquiryForm: React.FC = () => {
         {
           email: formData.email,
           otp: formData.otp,
-        }
+        },
       );
 
       if (response.data.success) {
@@ -276,7 +340,12 @@ const ModernEnquiryForm: React.FC = () => {
 
     setIsSubmitting(true);
 
-    const submittedData = { ...formData };
+    const submittedData = {
+      ...formData,
+      project: formData.project,
+      propertySource: formData.propertySource,
+      propertyId: formData.propertyId,
+    };
     let isUndoClicked = false;
     let isSaved = false;
 
@@ -322,7 +391,7 @@ const ModernEnquiryForm: React.FC = () => {
         try {
           const response = await axios.post(
             `${import.meta.env.VITE_URL}/api/enquiryForm/saveForm`,
-            submittedData
+            submittedData,
           );
           isSaved = true;
           toastObj.dismiss();
@@ -376,7 +445,7 @@ const ModernEnquiryForm: React.FC = () => {
               <SelectItem value="villa">Villa</SelectItem>
               <SelectItem value="apartment">Apartment</SelectItem>
               <SelectItem value="plot">Plot</SelectItem>
-              <SelectItem value="commercial">Commercial</SelectItem>
+              <SelectItem value="land">Land</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -398,6 +467,52 @@ const ModernEnquiryForm: React.FC = () => {
                 ₹1 Crore - ₹2 Crores
               </SelectItem>
               <SelectItem value="above ₹2 Crores">Above ₹2 Crores</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Select Project *</Label>
+
+          <Select
+            value={formData.propertyId}
+            onValueChange={(value) => {
+              const selected = projects.find((p) => p._id === value);
+
+              setFormData((prev) => ({
+                ...prev,
+                propertyId: value,
+                project:
+                  selected?.projectName ||
+                  selected?.name ||
+                  selected?.location ||
+                  "",
+              }));
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choose project" />
+            </SelectTrigger>
+
+            <SelectContent>
+              {projectsLoading ? (
+                <SelectItem value="loading">Loading...</SelectItem>
+              ) : projects.length === 0 ? (
+                <SelectItem value="empty" disabled>
+                  No projects found
+                </SelectItem>
+              ) : (
+                projects.map((proj) => (
+                  <SelectItem
+                    key={proj?.projectName || proj?._id}
+                    value={proj._id}
+                  >
+                    {proj?.projectName ||
+                      proj?.name ||
+                      proj?.location ||
+                      "Unnamed Project"}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -465,8 +580,8 @@ const ModernEnquiryForm: React.FC = () => {
               {otpSent && formData.email === verifiedEmail
                 ? "OTP Sent!"
                 : otpLoading
-                ? "Sending OTP..."
-                : "Send OTP"}
+                  ? "Sending OTP..."
+                  : "Send OTP"}
             </Button>
           )}
         </div>
@@ -557,6 +672,9 @@ const ModernEnquiryForm: React.FC = () => {
         onClick={() => {
           setFormData({
             propertyType: "",
+            propertySource: "",
+            propertyId: "",
+            project: "",
             budget: "",
             name: "",
             email: "",
