@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -21,14 +21,22 @@ import {
   Edit,
   GalleryThumbnails,
   Image,
+  Calendar,
+  PercentIcon,
+  Building,
 } from "lucide-react";
-import { Building, FloorUnit } from "@/types/building";
+import { FloorUnit } from "@/types/building";
 import { useAuth } from "@/contexts/AuthContext";
 import { BuildingDialog } from "@/components/properties/BuildingDialog";
 import { FloorDialog } from "@/components/properties/FloorDialog";
 import { DeleteConfirmDialog } from "@/components/properties/DeleteConfirmDialog";
 import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useQueries,
+} from "@tanstack/react-query";
 import axios from "axios";
 import Loader from "@/components/Loader";
 import {
@@ -40,6 +48,7 @@ import {
 } from "@/utils/public/Config";
 import BulkFloorGenerator from "./Properties/BulkFloorGenerator";
 import BulkCsvUploader from "./Properties/BulkCsvUploader";
+import { Progress } from "@radix-ui/react-progress";
 
 const BuildingDetails = () => {
   const { buildingId } = useParams<{ buildingId: string }>();
@@ -47,6 +56,8 @@ const BuildingDetails = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const [openFloorId, setOpenFloorId] = useState<string | null>(null);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   // Fetch floors
@@ -88,7 +99,62 @@ const BuildingDetails = () => {
       toast.error("Failed to download brochure");
     }
   };
+  const { data: allUnits = [], isLoading: unitsLoading } = useQuery({
+    queryKey: ["all-units", buildingId],
+    queryFn: async () => {
+      const responses = await Promise.all(
+        (floors || []).map((floor) =>
+          axios.get(
+            `${import.meta.env.VITE_URL}/api/unit/getUnitsByFloorIdAndBuildingId/${buildingId}/${floor._id}`,
+            { withCredentials: true },
+          ),
+        ),
+      );
 
+      return responses.flatMap((res) => res.data?.data || []);
+    },
+    enabled: !!floors && floors.length > 0,
+  });
+  const unitProgressQueries = useQueries({
+    queries: (allUnits || []).map((unit: any) => ({
+      queryKey: ["unit-project-full", unit._id],
+      queryFn: async () => {
+        const floorId =
+          typeof unit.floorId === "object" ? unit.floorId?._id : unit.floorId;
+
+        if (!buildingId || !floorId) return null;
+
+        // 1️⃣ Get project details + tasks
+        const { data: projectRes } = await axios.get(
+          `${import.meta.env.VITE_URL}/api/project/units/${buildingId}/${unit._id}/completed-tasks`,
+          { withCredentials: true },
+        );
+
+        // 2️⃣ Get overall progress
+        const { data: progressRes } = await axios.get(
+          `${import.meta.env.VITE_URL}/api/project/getProject/${buildingId}/${floorId}/${unit._id}/unit-progress`,
+          { withCredentials: true },
+        );
+
+        return {
+          unitId: unit._id,
+          overallProgress: progressRes?.data?.overallProgress || 0,
+          projectDetails: projectRes?.data?.projectDetails || null,
+          completedTasks: projectRes?.data?.completedTasks || [],
+        };
+      },
+      enabled: !!buildingId && !!unit.floorId,
+    })),
+  });
+  const progressMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    unitProgressQueries.forEach((query) => {
+      if (query.data) {
+        map[query.data.unitId] = query.data;
+      }
+    });
+    return map;
+  }, [unitProgressQueries]);
   const {
     data: building,
     isLoading: buildingLoading,
@@ -195,11 +261,9 @@ const BuildingDetails = () => {
 
   if (buildError) {
     toast.error(buildErr?.message || "Failed to fetch building");
-    console.log("Failed to fetch building", buildErr);
   }
   if (floorsError) {
     toast.error(floorsErr?.message || "Failed to fetch floors");
-    console.log("Failed to fetch floors", floorsErr);
   }
 
   // Loading state
@@ -547,7 +611,160 @@ const BuildingDetails = () => {
             </div>
           </CardContent>
         </Card>
+        {/* Construction Overview */}
+        <Card className="rounded-2xl shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Building className="mr-2 h-5 w-5" />
+              Construction Overview
+            </CardTitle>
+          </CardHeader>
 
+          <CardContent className="space-y-4">
+            {unitsLoading && (
+              <p className="text-muted-foreground">
+                Loading construction data...
+              </p>
+            )}
+
+            {/* Floors Accordion */}
+            <div className="space-y-4">
+              {(floors || []).map((floor) => {
+                const isOpen = openFloorId === floor._id;
+
+                const floorUnits = allUnits.filter((u: any) => {
+                  const unitFloorId =
+                    typeof u.floorId === "object" ? u.floorId?._id : u.floorId;
+                  return unitFloorId === floor._id;
+                });
+
+                return (
+                  <div
+                    key={floor._id}
+                    className="border rounded-2xl bg-white shadow-sm transition-all"
+                  >
+                    {/* Floor Header */}
+                    <button
+                      onClick={() => setOpenFloorId(isOpen ? null : floor._id)}
+                      className="w-full flex items-center justify-between px-6 py-4 text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Layers className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">
+                          Floor {floor.floorNumber}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {floorUnits.length} units
+                        </span>
+                      </div>
+
+                      <ChevronLeft
+                        className={`h-4 w-4 transition-transform duration-300 ${
+                          isOpen ? "rotate-90" : "-rotate-90"
+                        }`}
+                      />
+                    </button>
+
+                    {/* Animated Content */}
+                    <div
+                      className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                        isOpen
+                          ? "max-h-[2000px] opacity-100"
+                          : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="px-6 pb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {floorUnits.map((unit: any) => {
+                            const project = progressMap[unit._id];
+
+                            const latestTask = project?.completedTasks?.length
+                              ? [...project.completedTasks].sort(
+                                  (a: any, b: any) =>
+                                    new Date(
+                                      b.submittedOn || b.updatedAt,
+                                    ).getTime() -
+                                    new Date(
+                                      a.submittedOn || a.updatedAt,
+                                    ).getTime(),
+                                )[0]
+                              : null;
+
+                            return (
+                              <div
+                                key={unit._id}
+                                className="border rounded-2xl p-4 bg-muted/30 hover:bg-muted/40 transition-all"
+                              >
+                                {/* Header */}
+                                <div className="flex justify-between mb-3">
+                                  <h4 className="font-semibold text-sm">
+                                    Unit {unit.plotNo}
+                                  </h4>
+                                  <Badge className="bg-blue-600 text-white text-xs">
+                                    {project?.overallProgress || 0}%
+                                  </Badge>
+                                </div>
+
+                                {latestTask && (
+                                  <div className="mb-3">
+                                    <p className="text-[11px] text-muted-foreground">
+                                      Latest Task
+                                    </p>
+                                    <p className="text-sm font-medium truncate">
+                                      {latestTask.title}
+                                    </p>
+                                  </div>
+                                )}
+
+                                <div className="mb-3">
+                                  <p className="text-[11px] text-muted-foreground">
+                                    Site Incharge
+                                  </p>
+                                  <p className="text-sm font-medium">
+                                    {project?.projectDetails?.siteIncharge
+                                      ?.name || "N/A"}
+                                  </p>
+                                </div>
+
+                                <div className="mb-4">
+                                  <p className="text-[11px] text-muted-foreground">
+                                    Contractors
+                                  </p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {project?.projectDetails?.contractors?.map(
+                                      (c: any) => (
+                                        <Badge
+                                          key={c._id}
+                                          variant="outline"
+                                          className="text-xs"
+                                        >
+                                          {c.name}
+                                        </Badge>
+                                      ),
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-blue-600 transition-all duration-500"
+                                    style={{
+                                      width: `${project?.overallProgress || 0}%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
         {/* Gallery */}
         {building?.images?.length > 0 && (
           <Card className="shadow-lg rounded-xl overflow-hidden">

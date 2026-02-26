@@ -1,10 +1,11 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AuthRedirect = () => {
   const { isUnauthorized, setIsUnauthorized } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ correct
 
   useEffect(() => {
     const isPublicRoute = location.pathname.startsWith("/public");
@@ -16,7 +17,7 @@ const AuthRedirect = () => {
         setIsUnauthorized(false);
       }
     }
-  }, [isUnauthorized, navigate, setIsUnauthorized]);
+  }, [isUnauthorized, location.pathname, navigate, setIsUnauthorized]);
 
   return null;
 };

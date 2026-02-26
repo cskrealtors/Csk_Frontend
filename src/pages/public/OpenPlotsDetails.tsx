@@ -79,7 +79,6 @@ const OpenPlotsDetails = () => {
   const fetchOpenPlotById = async () => {
     setLoading(true);
     try {
-      console.log(id);
       const response = await axios.get(
         `${import.meta.env.VITE_URL}/api/openPlot/getOpenPlotById/${id}`
       );
@@ -105,7 +104,6 @@ const OpenPlotsDetails = () => {
   }, [id]);
 
   const handleSiteVisitSubmit = (data: any) => {
-    console.log("Site visit scheduled:", data);
     setSiteVisitOpen(false);
   };
 

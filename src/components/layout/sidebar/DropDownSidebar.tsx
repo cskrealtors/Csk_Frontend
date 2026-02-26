@@ -65,7 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
     modules: [
       "Properties",
       "Projects Overview",
-      "Project Manager",
+      "Task Tracker",
       "Site Visits",
       "Construction Timeline",
       "Quality Control",

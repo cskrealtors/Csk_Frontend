@@ -34,6 +34,7 @@ import BulkInnerPlotGenerator from "./BulkInnerPlotGenerator";
 import CsvInnerPlotUploader from "./CsvInnerPlotUploader";
 import { toast } from "sonner";
 import { getAllInnerPlot } from "@/api/innerPlot.api";
+import MainLayout from "../layout/MainLayout";
 
 export function getStatusBadge(status: string) {
   const statusColors: Record<string, string> = {
@@ -134,240 +135,252 @@ export function OpenPlotDetails({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Back + Edit/Delete */}
-      <div className="flex justify-between items-center">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to All Open Plots
-        </Button>
-        <div className="flex md:flex-row flex-col gap-3">
-          {canEdit && (
-            <>
-              <Button size="sm" onClick={onEdit}>
-                <Edit className="mr-2 h-4 w-4" /> Edit
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => setDeleteDialogOpen(true)}
-              >
-                <Trash className="mr-2 h-4 w-4" /> Delete
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Basic Info */}
-      <Card>
-        <div className="flex flex-col md:flex-row">
-          {openPlotData?.thumbnailUrl && (
-            <div className="md:w-1/3">
-              <img
-                src={openPlotData?.thumbnailUrl}
-                alt={openPlotData?.projectName}
-                className="h-64 w-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
-              />
-            </div>
-          )}
-          <div
-            className={`${openPlotData?.thumbnailUrl ? "md:w-2/3" : "w-full"} p-6`}
+    <MainLayout>
+      <div className="space-y-6">
+        {/* Back + Edit/Delete */}
+        <div className="flex justify-between items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/properties")}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-bold mb-1">
-                  {openPlotData?.projectName}
-                </h2>
-                {getStatusBadge(openPlotData?.status)}
-                <p className="text-muted-foreground mt-1">
-                  Open Plot No: {openPlotData?.openPlotNo}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <div className="flex items-center">
-                <Map className="h-5 w-5 mr-2 text-muted-foreground" />
-                <span>Location: {openPlotData?.location}</span>
-              </div>
-
-              <div className="flex items-center">
-                <Building className="h-5 w-5 mr-2 text-muted-foreground" />
-                <span>
-                  Total Area: {openPlotData?.totalArea} {openPlotData?.areaUnit}
-                </span>
-              </div>
-
-              <div className="flex items-center">
-                <Building className="h-5 w-5 mr-2 text-muted-foreground" />
-                <span>Facing: {openPlotData?.facing || "N/A"}</span>
-              </div>
-
-              <div className="flex items-center">
-                <Building className="h-5 w-5 mr-2 text-muted-foreground" />
-                <span>Road Width: {openPlotData?.roadWidthFt ?? "N/A"} ft</span>
-              </div>
-            </div>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back to All Open Plots
+          </Button>
+          <div className="flex md:flex-row flex-col gap-3">
+            {canEdit && (
+              <>
+                <Button size="sm" onClick={onEdit}>
+                  <Edit className="mr-2 h-4 w-4" /> Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </>
+            )}
           </div>
         </div>
-      </Card>
 
-      {/* Inner plot */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Inner Plots
-          </CardTitle>
-
-          <div className="flex gap-2">
-            <Button variant="default" onClick={() => setBulkManualOpen(true)}>
-              Plots Generate
-            </Button>
-
-            <Button variant="default" onClick={() => setCsvUploadOpen(true)}>
-              Upload CSV
-            </Button>
-
-            <Button
-              variant="destructive"
-              onClick={() => setInnerPlotDialogOpen(true)}
+        {/* Basic Info */}
+        <Card>
+          <div className="flex flex-col md:flex-row">
+            {openPlotData?.thumbnailUrl && (
+              <div className="md:w-1/3">
+                <img
+                  src={openPlotData?.thumbnailUrl}
+                  alt={openPlotData?.projectName}
+                  className="h-64 w-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
+                />
+              </div>
+            )}
+            <div
+              className={`${openPlotData?.thumbnailUrl ? "md:w-2/3" : "w-full"} p-6`}
             >
-              Add Plot
-            </Button>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-bold mb-1">
+                    {openPlotData?.projectName}
+                  </h2>
+                  {getStatusBadge(openPlotData?.status)}
+                  <p className="text-muted-foreground mt-1">
+                    Open Plot No: {openPlotData?.openPlotNo}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div className="flex items-center">
+                  <Map className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <span>Location: {openPlotData?.location}</span>
+                </div>
+
+                <div className="flex items-center">
+                  <Building className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <span>
+                    Total Area: {openPlotData?.totalArea}{" "}
+                    {openPlotData?.areaUnit}
+                  </span>
+                </div>
+
+                <div className="flex items-center">
+                  <Building className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <span>Facing: {openPlotData?.facing || "N/A"}</span>
+                </div>
+
+                <div className="flex items-center">
+                  <Building className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <span>
+                    Road Width: {openPlotData?.roadWidthFt ?? "N/A"} ft
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </CardHeader>
+        </Card>
 
-        <CardContent>
-          {innerPlotsLoading && <p>Loading inner plots...</p>}
+        {/* Inner plot */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Inner Plots
+            </CardTitle>
 
-          {innerPlotsError && (
-            <p className="text-red-500">Failed to load inner plots</p>
-          )}
+            <div className="flex gap-2">
+              <Button variant="default" onClick={() => setBulkManualOpen(true)}>
+                Plots Generate
+              </Button>
 
-          {!innerPlotsLoading && innerPlots.length === 0 && (
-            <p className="text-muted-foreground italic">
-              No inner plots added yet.
-            </p>
-          )}
+              <Button variant="default" onClick={() => setCsvUploadOpen(true)}>
+                Upload CSV
+              </Button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {innerPlots.map((inner, idx) => {
-              console.log("inner plots ", inner);
-              return (
-                <Card
-                  key={inner._id || idx}
-                  className="overflow-hidden hover:shadow-lg transition"
-                >
-                  {/* Thumbnail */}
-                  {inner.thumbnailUrl ? (
-                    <img
-                      src={inner.thumbnailUrl}
-                      alt={inner.plotNo}
-                      className="h-40 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-40 bg-muted flex items-center justify-center">
-                      <ImageIcon className="h-10 w-10 opacity-30" />
-                    </div>
-                  )}
+              <Button
+                variant="destructive"
+                onClick={() => setInnerPlotDialogOpen(true)}
+              >
+                Add Plot
+              </Button>
+            </div>
+          </CardHeader>
 
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-lg">
-                        Plot No: {inner.plotNo}
-                      </h3>
-                      <Badge
-                        className={
-                          inner.status === "Available"
-                            ? "bg-green-500 text-white"
-                            : inner.status === "Sold"
-                              ? "bg-blue-500 text-white"
-                              : "bg-red-500 text-white"
+          <CardContent>
+            {innerPlotsLoading && <p>Loading inner plots...</p>}
+
+            {innerPlotsError && (
+              <p className="text-red-500">Failed to load inner plots</p>
+            )}
+
+            {!innerPlotsLoading && innerPlots.length === 0 && (
+              <p className="text-muted-foreground italic">
+                No inner plots added yet.
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {innerPlots.map((inner, idx) => {
+                return (
+                  <Card
+                    key={inner._id || idx}
+                    className="overflow-hidden hover:shadow-lg transition"
+                  >
+                    {/* Thumbnail */}
+                    {inner.thumbnailUrl ? (
+                      <img
+                        src={inner.thumbnailUrl}
+                        alt={inner.plotNo}
+                        className="h-40 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-40 bg-muted flex items-center justify-center">
+                        <ImageIcon className="h-10 w-10 opacity-30" />
+                      </div>
+                    )}
+
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-lg">
+                          Plot No: {inner.plotNo}
+                        </h3>
+                        <Badge
+                          className={
+                            inner.status === "Available"
+                              ? "bg-green-500 text-white"
+                              : inner.status === "Sold"
+                                ? "bg-blue-500 text-white"
+                                : "bg-red-500 text-white"
+                          }
+                        >
+                          {inner.status}
+                        </Badge>
+                      </div>
+
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div className="flex justify-between">
+                          <span>Area</span>
+                          <span>{inner.area}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Facing</span>
+                          <span>{inner.facing || "N/A"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Type</span>
+                          <span>{inner.plotType}</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        className="w-full mt-3"
+                        onClick={() =>
+                          navigate(
+                            `/properties/openplot/${openPlotData?._id}/inner-detail/${inner._id}`,
+                          )
                         }
                       >
-                        {inner.status}
-                      </Badge>
-                    </div>
-
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <div className="flex justify-between">
-                        <span>Area</span>
-                        <span>{inner.area}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Facing</span>
-                        <span>{inner.facing || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Type</span>
-                        <span>{inner.plotType}</span>
-                      </div>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      className="w-full mt-3"
-                      onClick={() => navigate(`/inner-detail/${inner._id}`)}
-                    >
-                      View Details
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Legal Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center">
-              <FileText className="mr-2 h-5 w-5" /> Legal Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p>
-              <strong>Survey No:</strong> {openPlotData?.surveyNo || "N/A"}
-            </p>
-            <p>
-              <strong>Approval Authority:</strong>{" "}
-              {openPlotData?.approvalAuthority || "N/A"}
-            </p>
-            <p>
-              <strong>RERA No:</strong> {openPlotData?.reraNo || "N/A"}
-            </p>
-            <p>
-              <strong>Document No:</strong> {openPlotData?.documentNo || "N/A"}
-            </p>
-            <p>
-              <strong>Title Status:</strong>{" "}
-              {getStatusBadge(openPlotData?.titleStatus)}
-            </p>
-            <p className="flex items-start">
-              <MessageSquare className="mr-2 h-4 w-4 text-muted-foreground" />
-              {openPlotData?.remarks || "No remarks"}
-            </p>
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center">
-              <Building className="mr-2 h-5 w-5" /> Boundaries
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {openPlotData?.boundaries || "No boundary information available."}
-          </CardContent>
-        </Card>
-      </div>
+        {/* Legal Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <FileText className="mr-2 h-5 w-5" /> Legal Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p>
+                <strong>Survey No:</strong> {openPlotData?.surveyNo || "N/A"}
+              </p>
+              <p>
+                <strong>Approval Authority:</strong>{" "}
+                {openPlotData?.approvalAuthority || "N/A"}
+              </p>
+              <p>
+                <strong>RERA No:</strong> {openPlotData?.reraNo || "N/A"}
+              </p>
+              <p>
+                <strong>Document No:</strong>{" "}
+                {openPlotData?.documentNo || "N/A"}
+              </p>
+              <p>
+                <strong>Title Status:</strong>{" "}
+                {getStatusBadge(openPlotData?.titleStatus)}
+              </p>
+              <p className="flex items-start">
+                <MessageSquare className="mr-2 h-4 w-4 text-muted-foreground" />
+                {openPlotData?.remarks || "No remarks"}
+              </p>
+            </CardContent>
+          </Card>
 
-      {/* Interested Leads */}
-      {/* <Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <Building className="mr-2 h-5 w-5" /> Boundaries
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {openPlotData?.boundaries || "No boundary information available."}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Interested Leads */}
+        {/* <Card>
         <CardHeader>
           <CardTitle className="text-xl flex items-center">
             <FileText className="mr-2 h-5 w-5" /> Interested Leads
@@ -397,164 +410,165 @@ export function OpenPlotDetails({
         </CardContent>
       </Card> */}
 
-      {/* Gallery */}
-      {galleryImages.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center">
-              <ImageIcon className="mr-2 h-5 w-5" /> Gallery
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 auto-rows-[150px]">
-              {galleryImages.map((image, index) => (
-                <div
-                  key={index}
-                  className={`relative cursor-pointer overflow-hidden rounded-lg shadow-sm ${
-                    index % 5 === 0 ? "col-span-2 row-span-2" : ""
-                  }`}
-                  onClick={() => openLightbox(image)}
-                >
-                  <img
-                    src={image}
-                    alt={`Plot image ${index + 1}`}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-              ))}
+        {/* Gallery */}
+        {galleryImages.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <ImageIcon className="mr-2 h-5 w-5" /> Gallery
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 auto-rows-[150px]">
+                {galleryImages.map((image, index) => (
+                  <div
+                    key={index}
+                    className={`relative cursor-pointer overflow-hidden rounded-lg shadow-sm ${
+                      index % 5 === 0 ? "col-span-2 row-span-2" : ""
+                    }`}
+                    onClick={() => openLightbox(image)}
+                  >
+                    <img
+                      src={image}
+                      alt={`Plot image ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Map */}
+        {openPlotData?.googleMapsLocation ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center">
+                <MapPin className="mr-2 h-5 w-5" /> Location Map
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <iframe
+                title="Plot Location"
+                src={(() => {
+                  const url = openPlotData?.googleMapsLocation || "";
+                  if (!url) return "";
+                  if (url.includes("/embed?pb=")) return url;
+                  if (url.includes("/maps/place/"))
+                    return url.replace("/maps/place/", "/maps/embed/place/");
+                  const q = url.match(/q=([^&]+)/);
+                  return `https://www.google.com/maps?q=${
+                    q ? decodeURIComponent(q[1]) : encodeURIComponent(url)
+                  }&output=embed`;
+                })()}
+                className="w-full h-96 rounded-lg border"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <p className="text-gray-500 italic">
+            No map available for this openPlotData?.
+          </p>
+        )}
+
+        {/* Delete Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this open plot?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  onDelete();
+                  setDeleteDialogOpen(false);
+                }}
+              >
+                Delete Plot
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </DialogContent>
+        </Dialog>
 
-      {/* Map */}
-      {openPlotData?.googleMapsLocation ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center">
-              <MapPin className="mr-2 h-5 w-5" /> Location Map
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <iframe
-              title="Plot Location"
-              src={(() => {
-                const url = openPlotData?.googleMapsLocation || "";
-                if (!url) return "";
-                if (url.includes("/embed?pb=")) return url;
-                if (url.includes("/maps/place/"))
-                  return url.replace("/maps/place/", "/maps/embed/place/");
-                const q = url.match(/q=([^&]+)/);
-                return `https://www.google.com/maps?q=${
-                  q ? decodeURIComponent(q[1]) : encodeURIComponent(url)
-                }&output=embed`;
-              })()}
-              className="w-full h-96 rounded-lg border"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
+        {/* Lightbox */}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-4xl h-[80vh] p-0">
+            <img
+              src={currentImage}
+              alt="Full view of plot"
+              className="w-full h-full object-contain"
             />
-          </CardContent>
-        </Card>
-      ) : (
-        <p className="text-gray-500 italic">
-          No map available for this openPlotData?.
-        </p>
-      )}
+          </DialogContent>
+        </Dialog>
+        <InnerPlotDialog
+          open={innerPlotDialogOpen}
+          onOpenChange={(val) => {
+            setInnerPlotDialogOpen(val);
 
-      {/* Delete Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this open plot?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                onDelete();
-                setDeleteDialogOpen(false);
-              }}
-            >
-              Delete Plot
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            if (!val) {
+              queryClient.invalidateQueries({
+                queryKey: ["inner-plots", openPlotData?._id],
+              });
 
-      {/* Lightbox */}
-      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-4xl h-[80vh] p-0">
-          <img
-            src={currentImage}
-            alt="Full view of plot"
-            className="w-full h-full object-contain"
-          />
-        </DialogContent>
-      </Dialog>
-      <InnerPlotDialog
-        open={innerPlotDialogOpen}
-        onOpenChange={(val) => {
-          setInnerPlotDialogOpen(val);
+              queryClient.refetchQueries({
+                queryKey: ["inner-plots", openPlotData?._id],
+              });
+            }
+          }}
+          openPlotId={openPlotData?._id}
+        />
 
-          if (!val) {
-            queryClient.invalidateQueries({
-              queryKey: ["inner-plots", openPlotData?._id],
-            });
+        <BulkInnerPlotGenerator
+          open={bulkManualOpen}
+          onOpenChange={(val) => {
+            setBulkManualOpen(val);
 
-            queryClient.refetchQueries({
-              queryKey: ["inner-plots", openPlotData?._id],
-            });
-          }
-        }}
-        openPlotId={openPlotData?._id}
-      />
+            if (!val) {
+              queryClient.invalidateQueries({
+                queryKey: ["inner-plots", openPlotData?._id],
+              });
 
-      <BulkInnerPlotGenerator
-        open={bulkManualOpen}
-        onOpenChange={(val) => {
-          setBulkManualOpen(val);
+              queryClient.refetchQueries({
+                queryKey: ["inner-plots", openPlotData?._id],
+              });
+            }
+          }}
+          openPlotId={openPlotData?._id}
+        />
 
-          if (!val) {
-            queryClient.invalidateQueries({
-              queryKey: ["inner-plots", openPlotData?._id],
-            });
+        <CsvInnerPlotUploader
+          open={csvUploadOpen}
+          onOpenChange={(val) => {
+            setCsvUploadOpen(val);
 
-            queryClient.refetchQueries({
-              queryKey: ["inner-plots", openPlotData?._id],
-            });
-          }
-        }}
-        openPlotId={openPlotData?._id}
-      />
+            if (!val) {
+              queryClient.invalidateQueries({
+                queryKey: ["inner-plots", openPlotData?._id],
+              });
 
-      <CsvInnerPlotUploader
-        open={csvUploadOpen}
-        onOpenChange={(val) => {
-          setCsvUploadOpen(val);
-
-          if (!val) {
-            queryClient.invalidateQueries({
-              queryKey: ["inner-plots", openPlotData?._id],
-            });
-
-            queryClient.refetchQueries({
-              queryKey: ["inner-plots", openPlotData?._id],
-            });
-          }
-        }}
-        openPlotId={openPlotData?._id}
-      />
-    </div>
+              queryClient.refetchQueries({
+                queryKey: ["inner-plots", openPlotData?._id],
+              });
+            }
+          }}
+          openPlotId={openPlotData?._id}
+        />
+      </div>
+    </MainLayout>
   );
 }

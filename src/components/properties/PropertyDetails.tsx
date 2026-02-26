@@ -304,12 +304,12 @@ export function PropertyDetails({
                 <div>
                   <div className="flex items-center space-x-2 mb-1">
                     <h2 className="text-2xl font-bold">
-                      {property.projectName}
+                      {property?.projectName}
                     </h2>
-                    {getStatusBadge(property.status)}
+                    {getStatusBadge(property?.status)}
                   </div>
                   <p className="text-muted-foreground">
-                    Flat No. {property.plotNo} • Mem. No. {property.memNo}
+                    Flat No. {property?.plotNo}
                   </p>
                 </div>
               </div>
@@ -317,15 +317,19 @@ export function PropertyDetails({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                 <div className="flex items-center">
                   <Map className="h-5 w-5 mr-2 text-muted-foreground" />{" "}
-                  <span>Facing: {property.villaFacing}</span>
+                  <span>Facing: {property?.villaFacing}</span>
                 </div>
                 <div className="flex items-center">
                   <Building className="h-5 w-5 mr-2 text-muted-foreground" />{" "}
-                  <span>Extent: {property.extent} sq. ft</span>
+                  <span>Extent: {property?.extent} sq. ft</span>
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />{" "}
-                  <span>Delivery: {formatDate(property.deliveryDate)}</span>
+                  <span>Delivery: {formatDate(property?.deliveryDate)}</span>
+                </div>
+                <div className="flex items-center">
+                  <Check className="h-5 w-5 mr-2 text-muted-foreground" />{" "}
+                  <span>Project Status: {property?.projectStatus}</span>
                 </div>
               </div>
 

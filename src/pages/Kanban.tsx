@@ -1626,6 +1626,8 @@ const KanbanBoard: React.FC = () => {
   };
 
   const fetchTasks = async (userId?: string) => {
+    console.log("calledd");
+
     try {
       setTasksLoading(true);
 
@@ -1648,8 +1650,9 @@ const KanbanBoard: React.FC = () => {
       if (!res.ok) {
         throw new Error(data.error || "Failed to fetch tasks");
       }
+      console.log(data.tasks, "tasks");
 
-      setTasks(data.tasks ?? []);
+      setTasks(data.tasks);
     } catch (err) {
       console.error("Kanban Fetch Error:", err);
       setTasks([]);
@@ -2631,7 +2634,7 @@ const KanbanBoard: React.FC = () => {
   useEffect(() => {
     fetchAdmin();
     fetchUserRole();
-    // fetchTasks();
+    fetchTasks();
     fetchDepartments();
     fetchMultiTaskGroup("698d64c89e0635144f5a29b4");
   }, []);
@@ -2734,6 +2737,27 @@ const KanbanBoard: React.FC = () => {
     setTasks([]);
   }, [selectedRole, selectedProject]);
 
+  useEffect(() => {
+  // only for non-admin
+  if (!currentUser || userRole === "ADMIN") return;
+
+  // already selected → stop
+  if (selectedEmployee) return;
+
+  for (const dept of departments) {
+    for (const label of dept.labels || []) {
+      for (const emp of label.types || []) {
+        if (emp.userId === currentUser._id) {
+          setSelectedDepartmentId(dept._id);
+          setSelectedLabel(label.name);
+          setSelectedEmployee(emp.userId);
+          return;
+        }
+      }
+    }
+  }
+}, [departments, currentUser, userRole]);
+
   // useEffect(() => {
   //   if (!selectedEmployee) return;
 
@@ -2742,6 +2766,10 @@ const KanbanBoard: React.FC = () => {
   // }, [selectedEmployee]);
 
   const isProjectMode = Boolean(selectedProjectId);
+  const isTaskSelectionReady =
+    Boolean(selectedDepartmentId) &&
+    Boolean(selectedLabel) &&
+    Boolean(selectedEmployee);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -2752,15 +2780,14 @@ const KanbanBoard: React.FC = () => {
       return;
     }
 
+    const userId = selectedEmployee === "__ME__" ? currentUser._id : selectedEmployee;
+
     // Normal mode → behave like old code
     if (!selectedEmployee) {
       setTasks([]);
       setTasksLoading(false);
       return;
     }
-
-    const userId =
-      selectedEmployee === "__ME__" ? currentUser._id : selectedEmployee;
 
     fetchTasks(userId);
     settaskemployee(userId);
@@ -2776,83 +2803,156 @@ const KanbanBoard: React.FC = () => {
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Project Manager
+                Task Tracker
               </h1>
 
               <div className="flex flex-col gap-3 w-full lg:flex-row lg:items-center lg:w-auto">
                 {userRole === "ADMIN" && (
-                  <div className="flex flex-col gap-3 w-full sm:flex-row sm:w-auto">
-                    {/* DEPARTMENT SELECT */}
-                    <select
-                      value={selectedDepartmentId}
-                      onChange={(e) => {
-                        setSelectedDepartmentId(e.target.value);
-                        setSelectedLabel("");
-                        setSelectedEmployee("");
-                        setTasks([]);
-                      }}
-                      className="w-full sm:w-auto px-4 py-2 rounded-lg border
-        bg-white
-        border-gray-300
-        text-gray-900
-        focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">All Departments</option>
+                  // <div className="flex flex-col gap-3 w-full sm:flex-row sm:w-auto">
+                  //   {/* DEPARTMENT SELECT */}
+                  //   <select
+                  //     value={selectedDepartmentId}
+                  //     onChange={(e) => {
+                  //       setSelectedDepartmentId(e.target.value);
+                  //       setSelectedLabel("");
+                  //       setSelectedEmployee("");
+                  //       setTasks([]);
+                  //     }}
+                  //     className="w-full sm:w-auto px-4 py-2 rounded-lg border
+                  //      bg-white
+                  //      border-gray-300
+                  //      text-gray-900
+                  //     focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  //   >
+                  //     <option value="">All Departments</option>
 
-                      {departments.map((dept) => (
-                        <option key={dept._id} value={dept._id}>
-                          {dept.name}
-                        </option>
-                      ))}
-                    </select>
+                  //     {departments.map((dept) => (
+                  //       <option key={dept._id} value={dept._id}>
+                  //         {dept.name}
+                  //       </option>
+                  //     ))}
+                  //   </select>
 
-                    {/* LABEL SELECT */}
-                    <select
-                      value={selectedLabel}
-                      onChange={(e) => {
-                        setSelectedLabel(e.target.value);
-                        setSelectedEmployee("");
-                        setTasks([]);
-                      }}
-                      disabled={!selectedDepartmentId}
-                      className="w-full sm:w-auto px-4 py-2 rounded-lg border
-        bg-white dark:bg-gray-800
-        border-gray-300 dark:border-gray-700
-        text-gray-900 dark:text-white
-        focus:outline-none focus:ring-2 focus:ring-blue-500
-        disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value="">Select Label</option>
+                  //   {/* LABEL SELECT */}
+                  //   <select
+                  //     value={selectedLabel}
+                  //     onChange={(e) => {
+                  //       setSelectedLabel(e.target.value);
+                  //       setSelectedEmployee("");
+                  //       setTasks([]);
+                  //     }}
+                  //     disabled={!selectedDepartmentId}
+                  //     className="w-full sm:w-auto px-4 py-2 rounded-lg border
+                  //      bg-white dark:bg-gray-800
+                  //      border-gray-300 dark:border-gray-700
+                  //      text-gray-900 dark:text-white
+                  //      focus:outline-none focus:ring-2 focus:ring-blue-500
+                  //      disabled:opacity-50 disabled:cursor-not-allowed"
+                  //   >
+                  //     <option value="">Select Label</option>
 
-                      {availableLabels.map((label) => (
-                        <option key={label.name} value={label.name}>
-                          {label.name}
-                        </option>
-                      ))}
-                    </select>
+                  //     {availableLabels.map((label) => (
+                  //       <option key={label.name} value={label.name}>
+                  //         {label.name}
+                  //       </option>
+                  //     ))}
+                  //   </select>
 
-                    {/* EMPLOYEE SELECT */}
-                    <select
-                      value={selectedEmployee}
-                      onChange={(e) => setSelectedEmployee(e.target.value)}
-                      disabled={!selectedLabel}
-                      className="w-full sm:w-auto px-4 py-2 rounded-lg border
-        bg-white dark:bg-gray-800
-        border-gray-300 dark:border-gray-700
-        text-gray-900 dark:text-white
-        focus:outline-none focus:ring-2 focus:ring-blue-500
-        disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value="">Choose…</option>
+                  //   {/* EMPLOYEE SELECT */}
+                  //   <select
+                  //     value={selectedEmployee}
+                  //     onChange={(e) => setSelectedEmployee(e.target.value)}
+                  //     disabled={!selectedLabel}
+                  //     className="w-full sm:w-auto px-4 py-2 rounded-lg border
+                  //    bg-white dark:bg-gray-800
+                  //    border-gray-300 dark:border-gray-700
+                  //    text-gray-900 dark:text-white
+                  //    focus:outline-none focus:ring-2 focus:ring-blue-500
+                  //    disabled:opacity-50 disabled:cursor-not-allowed"
+                  //   >
+                  //     <option value="">Choose…</option>
 
-                      {availableEmployees.map((emp: any) => (
-                        <option key={emp.userId} value={emp.userId}>
-                          {emp.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  //     {availableEmployees.map((emp: any) => (
+                  //       <option key={emp.userId} value={emp.userId}>
+                  //         {emp.name}
+                  //       </option>
+                  //     ))}
+                  //   </select>
+                  // </div>
+                  <div></div>
                 )}
+
+                <div className="flex flex-col gap-3 w-full sm:flex-row sm:w-auto">
+                  {/* DEPARTMENT SELECT */}
+                  <select
+                    value={selectedDepartmentId}
+                    onChange={(e) => {
+                      setSelectedDepartmentId(e.target.value);
+                      setSelectedLabel("");
+                      setSelectedEmployee("");
+                      setTasks([]);
+                    }}
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg border
+                       bg-white
+                       border-gray-300
+                       text-gray-900
+                      focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Departments</option>
+
+                    {departments.map((dept) => (
+                      <option key={dept._id} value={dept._id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* LABEL SELECT */}
+                  <select
+                    value={selectedLabel}
+                    onChange={(e) => {
+                      setSelectedLabel(e.target.value);
+                      setSelectedEmployee("");
+                      setTasks([]);
+                    }}
+                    disabled={!selectedDepartmentId}
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg border
+                       bg-white dark:bg-gray-800
+                       border-gray-300 dark:border-gray-700
+                       text-gray-900 dark:text-white
+                       focus:outline-none focus:ring-2 focus:ring-blue-500
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select Label</option>
+
+                    {availableLabels.map((label) => (
+                      <option key={label.name} value={label.name}>
+                        {label.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* EMPLOYEE SELECT */}
+                  <select
+                    value={selectedEmployee}
+                    onChange={(e) => setSelectedEmployee(e.target.value)}
+                    disabled={!selectedLabel}
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg border
+                     bg-white dark:bg-gray-800
+                     border-gray-300 dark:border-gray-700
+                     text-gray-900 dark:text-white
+                     focus:outline-none focus:ring-2 focus:ring-blue-500
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Choose…</option>
+
+                    {availableEmployees.map((emp: any) => (
+                      <option key={emp.userId} value={emp.userId}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 {/* SEARCH */}
                 <div className="relative w-full sm:w-80">
@@ -2868,8 +2968,12 @@ const KanbanBoard: React.FC = () => {
 
                 {/* NEW TASK */}
                 <button
+                  disabled={!isTaskSelectionReady}
                   onClick={() => {
+                    if (!isTaskSelectionReady) return;
+
                     setShowNewTaskModal(true);
+
                     if (currentUser) {
                       setNewTask((prev) => ({
                         ...prev,
@@ -2882,10 +2986,12 @@ const KanbanBoard: React.FC = () => {
                       }));
                     }
                   }}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 text-white
-             bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600
-             hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700
-             transition-colors"
+                  className={`w-full sm:w-auto px-4 py-2 rounded-lg font-medium
+    flex items-center justify-center gap-2 text-white transition-colors
+    ${isTaskSelectionReady
+                      ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700"
+                      : "bg-gray-300 cursor-not-allowed opacity-60"
+                    }`}
                 >
                   <Plus className="w-4 h-4" />
                   New Task

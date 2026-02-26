@@ -46,7 +46,6 @@ export const updateInnerPlot = async (
 
 export const getInnerPlots = async (_id: string) => {
   const res = await api.get(`/api/innerPlot/by-openplot/${_id}`);
-  console.log(res.data.data);
   return res.data.data;
 };
 

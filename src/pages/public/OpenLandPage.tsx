@@ -51,7 +51,6 @@ const OpenLandsPage = () => {
 
   if (openLandsError) {
     toast.error(openLandsErr.message);
-    console.log("OpenLands error:", openLandsErr);
   }
   const amenities = [
     {

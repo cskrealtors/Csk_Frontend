@@ -49,7 +49,6 @@ interface Amenity {
 
 const ProjectDetailsPage = () => {
   const { id } = useParams();
-  console.log(id);
   const navigate = useNavigate();
   const [siteVisitOpen, setSiteVisitOpen] = useState(false);
 
@@ -84,15 +83,12 @@ const ProjectDetailsPage = () => {
     isError: propertyByIdError,
     error: propertyByIdErr,
     refetch,
-  } = usePropertyById(id); // make sure 'id' is passed as a dependency
-  console.log(property);
+  } = usePropertyById(id);
   if (propertyByIdError) {
     toast.error(propertyByIdErr.message);
-    console.log("Ongoing properties error:", propertyByIdErr);
   }
 
   const handleSiteVisitSubmit = (data: any) => {
-    console.log("Site visit scheduled:", data);
     setSiteVisitOpen(false);
   };
 

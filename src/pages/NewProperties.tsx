@@ -75,17 +75,11 @@ const NewProperties = () => {
   const [currentOpenPlot, setCurrentOpenPlot] = useState<OpenPlot | undefined>(
     undefined,
   );
-  const [selectedOpenPlot, setSelectedOpenPlot] = useState<OpenPlot | null>(
-    null,
-  );
 
   const [openLandDialog, setopenLandDialog] = useState(false);
   const [openLandSubmitting, setOpenLandSubmitting] = useState(false);
   const [currentOpenLand, setCurrentOpenLand] = useState<OpenLand | undefined>(
     undefined,
-  );
-  const [selectedOpenLand, setSelectedOpenLand] = useState<OpenLand | null>(
-    null,
   );
 
   const {
@@ -192,7 +186,7 @@ const NewProperties = () => {
       const updated = updatedData?.plot || updatedData?.data || updatedData;
 
       // 🔥 instantly re-render right-side details
-      setSelectedOpenPlot(updated);
+      // setSelectedOpenPlot(updated);
       setCurrentOpenPlot(updated);
 
       setDialogOpenPlot(false);
@@ -248,7 +242,7 @@ const NewProperties = () => {
 
       // optional but recommended
       setCurrentOpenLand(undefined);
-      setSelectedOpenLand(undefined);
+      // setSelectedOpenLand(undefined);
 
       queryClient.invalidateQueries({ queryKey: ["openLand"] });
     },
@@ -280,7 +274,7 @@ const NewProperties = () => {
 
       // update right panel if open
       setCurrentOpenLand(created);
-      setSelectedOpenLand(created);
+      // setSelectedOpenLand(created);
 
       setopenLandDialog(false);
     },
@@ -316,7 +310,7 @@ const NewProperties = () => {
       );
 
       setCurrentOpenLand(updated);
-      setSelectedOpenLand(updated);
+      // setSelectedOpenLand(updated);
       setopenLandDialog(false);
     },
   });
@@ -441,17 +435,8 @@ const NewProperties = () => {
     });
 
     setCurrentOpenLand(savedLand);
-    setSelectedOpenLand(savedLand);
+    // setSelectedOpenLand(savedLand);
     setopenLandDialog(false);
-  };
-
-  const handleAddOpenLand = () => {
-    setCurrentOpenLand(undefined);
-    setopenLandDialog(true);
-  };
-
-  const handleOpenLandBack = () => {
-    setSelectedOpenLand(null);
   };
 
   const handleEditOpenPlot = (plot: OpenPlot, e?: React.MouseEvent) => {
@@ -483,20 +468,20 @@ const NewProperties = () => {
   //   deleteOpenPlotMutation.mutate();
   // };
 
-  const handleDeleteOpenPlotFromDetails = async () => {
-    if (!selectedOpenPlot) return;
-    setCurrentOpenPlot(selectedOpenPlot);
-    if (!window.confirm("Delete this open plot?")) return;
-    await deleteOpenPlotMutation.mutateAsync();
-    setSelectedOpenPlot(null); // Go back to the list view
-  };
-  const handleDeleteOpenLandFromDetails = async () => {
-    if (!selectedOpenLand) return;
-    setCurrentOpenLand(selectedOpenLand);
-    if (!window.confirm("Delete this open Land?")) return;
-    await deleteOpenLandMutation.mutateAsync();
-    setSelectedOpenLand(null); // Go back to the list view
-  };
+  // const handleDeleteOpenPlotFromDetails = async () => {
+  //   if (!selectedOpenPlot) return;
+  //   setCurrentOpenPlot(selectedOpenPlot);
+  //   if (!window.confirm("Delete this open plot?")) return;
+  //   await deleteOpenPlotMutation.mutateAsync();
+  //   setSelectedOpenPlot(null); // Go back to the list view
+  // };
+  // const handleDeleteOpenLandFromDetails = async () => {
+  //   if (!selectedOpenLand) return;
+  //   setCurrentOpenLand(selectedOpenLand);
+  //   if (!window.confirm("Delete this open Land?")) return;
+  //   await deleteOpenLandMutation.mutateAsync();
+  //   setSelectedOpenLand(null); // Go back to the list view
+  // };
   const handleDownload = async (
     e: React.MouseEvent,
     url: string,
@@ -546,259 +531,238 @@ const NewProperties = () => {
   return (
     <MainLayout>
       <div className="space-y-6">
-        {selectedOpenPlot ? (
-          <OpenPlotDetails
-            plot={selectedOpenPlot}
-            onEdit={() => {
-              handleEditOpenPlot(selectedOpenPlot);
-            }}
-            onDelete={handleDeleteOpenPlotFromDetails}
-            onBack={() => setSelectedOpenPlot(null)}
-          />
-        ) : selectedOpenLand ? (
-          <OpenLandDetails
-            land={selectedOpenLand}
-            onEdit={() => {
-              handleEditOpenLand(selectedOpenLand);
-            }}
-            onDelete={handleDeleteOpenLandFromDetails}
-            onBack={() => setSelectedOpenLand(null)}
-          />
-        ) : (
-          <>
-            {/* Header */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold flex items-center">
-                  <Building2 className="mr-2 h-7 w-7" />
-                  Properties
-                </h1>
-                <p className="text-muted-foreground">
-                  Manage buildings and view details
-                </p>
-              </div>
-
-              {canEdit && (
-                <div className="flex gap-3 sm:flex-row flex-col">
-                  <Button
-                    className=""
-                    onClick={() => {
-                      setCurrentOpenLand(undefined);
-                      setopenLandDialog(true);
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Add Open Land
-                  </Button>
-
-                  <Button
-                    className="bg-estate-tomato hover:bg-estate-tomato/90"
-                    onClick={() => {
-                      setCurrentOpenPlot(undefined);
-                      setDialogOpenPlot(true);
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Add Open Plot
-                  </Button>
-
-                  <Button onClick={handleAddBuilding}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Property
-                  </Button>
-                </div>
-              )}
+        <>
+          {/* Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center">
+                <Building2 className="mr-2 h-7 w-7" />
+                Properties
+              </h1>
+              <p className="text-muted-foreground">
+                Manage buildings and view details
+              </p>
             </div>
 
-            {/* Filters + Buildings Grid */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by name or location..."
-                      className="pl-8"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
+            {canEdit && (
+              <div className="flex gap-3 sm:flex-row flex-col">
+                <Button
+                  className=""
+                  onClick={() => {
+                    setCurrentOpenLand(undefined);
+                    setopenLandDialog(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Open Land
+                </Button>
 
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="Apartment Complex">
-                        Apartment Complex
-                      </SelectItem>
-                      <SelectItem value="Villa Complex">
-                        Villa Complex
-                      </SelectItem>
-                      <SelectItem value="Plot Development">
-                        Plot Development
-                      </SelectItem>
-                      <SelectItem value="Land Parcel">Land Parcel</SelectItem>
-                      <SelectItem value="Open Plot">Open Plot</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <Button
+                  className="bg-estate-tomato hover:bg-estate-tomato/90"
+                  onClick={() => {
+                    setCurrentOpenPlot(undefined);
+                    setDialogOpenPlot(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Open Plot
+                </Button>
 
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                      <SelectItem value="Under Construction">
-                        Under Construction
-                      </SelectItem>
-                      <SelectItem value="Planned">Planned</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <Button onClick={handleAddBuilding}>
+                  <Plus className="mr-2 h-4 w-4" /> Add Property
+                </Button>
+              </div>
+            )}
+          </div>
 
-                  {(searchTerm !== "" ||
-                    typeFilter !== "all" ||
-                    statusFilter !== "all") && (
-                    <Button variant="ghost" onClick={clearFilters}>
-                      <X className="mr-2 h-4 w-4" /> Clear
-                    </Button>
-                  )}
+          {/* Filters + Buildings Grid */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or location..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                  {filteredBuildings.map((b, idx) => (
-                    <Card
-                      key={b._id || idx}
-                      className="overflow-hidden hover:shadow-lg transition cursor-pointer"
-                    >
-                      <div className="relative">
-                        {b.thumbnailUrl ? (
-                          <img
-                            src={b.thumbnailUrl}
-                            alt={b.projectName}
-                            className="h-48 w-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-48 bg-muted flex items-center justify-center">
-                            <Building2 className="h-10 w-10 opacity-20" />
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Apartment Complex">
+                      Apartment Complex
+                    </SelectItem>
+                    <SelectItem value="Villa Complex">Villa Complex</SelectItem>
+                    <SelectItem value="Plot Development">
+                      Plot Development
+                    </SelectItem>
+                    <SelectItem value="Land Parcel">Land Parcel</SelectItem>
+                    <SelectItem value="Open Plot">Open Plot</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Under Construction">
+                      Under Construction
+                    </SelectItem>
+                    <SelectItem value="Planned">Planned</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {(searchTerm !== "" ||
+                  typeFilter !== "all" ||
+                  statusFilter !== "all") && (
+                  <Button variant="ghost" onClick={clearFilters}>
+                    <X className="mr-2 h-4 w-4" /> Clear
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                {filteredBuildings.map((b, idx) => (
+                  <Card
+                    key={b._id || idx}
+                    className="overflow-hidden hover:shadow-lg transition cursor-pointer"
+                  >
+                    <div className="relative">
+                      {b.thumbnailUrl ? (
+                        <img
+                          src={b.thumbnailUrl}
+                          alt={b.projectName}
+                          className="h-48 w-full object-cover"
+                        />
+                      ) : (
+                        <div className="h-48 bg-muted flex items-center justify-center">
+                          <Building2 className="h-10 w-10 opacity-20" />
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3">
+                        {getStatusBadge(b.constructionStatus)}
+                      </div>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="font-semibold text-lg">
+                          {b.projectName}
+                        </h3>
+                        {canEdit && (
+                          <div
+                            className="flex gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) => handleEditBuilding(b, e)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={(e) =>
+                                openDeleteDialog("building", b._id!, e)
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         )}
-                        <div className="absolute top-3 right-3">
-                          {getStatusBadge(b.constructionStatus)}
+                      </div>
+
+                      <div className="flex items-center text-sm text-muted-foreground mb-3">
+                        <MapPin className="h-4 w-4 mr-1" /> {b.location}
+                      </div>
+
+                      <div className="space-y-2 mb-4 text-sm">
+                        <div className="flex justify-between">
+                          <span>Total Units</span>
+                          <span>{b.totalUnits}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Available</span>
+                          <span className="text-green-600">
+                            {b.availableUnits}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Sold</span>
+                          <span className="text-blue-600">{b.soldUnits}</span>
                         </div>
                       </div>
 
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-1">
-                          <h3 className="font-semibold text-lg">
-                            {b.projectName}
-                          </h3>
-                          {canEdit && (
-                            <div
-                              className="flex gap-1"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={(e) => handleEditBuilding(b, e)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={(e) =>
-                                  openDeleteDialog("building", b._id!, e)
-                                }
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
+                      <div className="border-t pt-3 text-sm space-y-2">
+                        <div className="flex justify-between">
+                          <span className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" /> Completion
+                          </span>
+                          <span>
+                            {new Date(b.completionDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Municipal</span>
+                          {b.municipalPermission ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <X className="h-4 w-4 text-red-500" />
                           )}
                         </div>
 
-                        <div className="flex items-center text-sm text-muted-foreground mb-3">
-                          <MapPin className="h-4 w-4 mr-1" /> {b.location}
-                        </div>
-
-                        <div className="space-y-2 mb-4 text-sm">
-                          <div className="flex justify-between">
-                            <span>Total Units</span>
-                            <span>{b.totalUnits}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Available</span>
-                            <span className="text-green-600">
-                              {b.availableUnits}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Sold</span>
-                            <span className="text-blue-600">{b.soldUnits}</span>
-                          </div>
-                        </div>
-
-                        <div className="border-t pt-3 text-sm space-y-2">
-                          <div className="flex justify-between">
-                            <span className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-1" /> Completion
-                            </span>
-                            <span>
-                              {new Date(b.completionDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>Municipal</span>
-                            {b.municipalPermission ? (
+                        {/* RERA Status */}
+                        <div className="flex justify-between mt-2">
+                          <span>RERA Approved</span>
+                          {b.reraApproved ? (
+                            <div className="flex items-center space-x-2">
                               <Check className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <X className="h-4 w-4 text-red-500" />
-                            )}
-                          </div>
-
-                          {/* RERA Status */}
-                          <div className="flex justify-between mt-2">
-                            <span>RERA Approved</span>
-                            {b.reraApproved ? (
-                              <div className="flex items-center space-x-2">
-                                <Check className="h-4 w-4 text-green-500" />
-                                <span className="text-sm font-medium">
-                                  {b.reraNumber || "N/A"}
-                                </span>
-                              </div>
-                            ) : (
-                              <X className="h-4 w-4 text-red-500" />
-                            )}
-                          </div>
+                              <span className="text-sm font-medium">
+                                {b.reraNumber || "N/A"}
+                              </span>
+                            </div>
+                          ) : (
+                            <X className="h-4 w-4 text-red-500" />
+                          )}
                         </div>
+                      </div>
 
-                        <div className="flex gap-2 mt-4">
-                          <Button
-                            size="sm"
-                            className="flex-1"
-                            onClick={() =>
-                              navigate(`/properties/building/${b?._id}`)
-                            }
-                          >
-                            View More
-                          </Button>
-                          {b?.brochureUrl && (
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={(e) =>
-                                  handleDownload(
-                                    e,
-                                    b?.brochureUrl!,
-                                    b?.projectName,
-                                  )
-                                }
-                                title="Download Brochure"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              {/* <Button
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() =>
+                            navigate(`/properties/building/${b?._id}`)
+                          }
+                        >
+                          View More
+                        </Button>
+                        {b?.brochureUrl && (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={(e) =>
+                                handleDownload(
+                                  e,
+                                  b?.brochureUrl!,
+                                  b?.projectName,
+                                )
+                              }
+                              title="Download Brochure"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            {/* <Button
                                 variant="outline"
                                 size="icon"
                                 onClick={(e) =>
@@ -808,167 +772,169 @@ const NewProperties = () => {
                               >
                                 <Share2 className="h-4 w-4" />
                               </Button> */}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ---------- Open Plots Section ---------- */}
+
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Open Plots</h2>
+              <div />
+            </div>
+
+            <Card>
+              <CardContent className="p-6">
+                {openPlots.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-lg font-semibold mb-2">
+                      No open plots found
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Add open plots using the button above.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {openPlots.map((plot) => (
+                      <Card
+                        key={plot._id}
+                        onClick={() =>
+                          navigate(`/properties/openplot/${plot._id}`)
+                        }
+                        className="overflow-hidden hover:shadow-lg transition cursor-pointer"
+                      >
+                        {/* ---------- THUMBNAIL ---------- */}
+                        <div className="relative">
+                          {plot.thumbnailUrl ? (
+                            <img
+                              src={plot.thumbnailUrl}
+                              alt={plot.projectName}
+                              className="h-48 w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-48 bg-muted flex items-center justify-center">
+                              <Building2 className="h-10 w-10 opacity-20" />
                             </div>
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* ---------- Open Plots Section ---------- */}
+                        <CardContent className="p-4">
+                          {/* ---------- HEADER ---------- */}
+                          <div className="flex justify-between items-start mb-1">
+                            <h3 className="font-semibold text-lg">
+                              {plot.projectName} — {plot.openPlotNo}
+                            </h3>
 
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">Open Plots</h2>
-                <div />
-              </div>
-
-              <Card>
-                <CardContent className="p-6">
-                  {openPlots.length === 0 ? (
-                    <div className="text-center py-12">
-                      <h3 className="text-lg font-semibold mb-2">
-                        No open plots found
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Add open plots using the button above.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {openPlots.map((plot) => (
-                        <Card
-                          key={plot._id}
-                          onClick={() => setSelectedOpenPlot(plot)}
-                          className="overflow-hidden hover:shadow-lg transition cursor-pointer"
-                        >
-                          {/* ---------- THUMBNAIL ---------- */}
-                          <div className="relative">
-                            {plot.thumbnailUrl ? (
-                              <img
-                                src={plot.thumbnailUrl}
-                                alt={plot.projectName}
-                                className="h-48 w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-48 bg-muted flex items-center justify-center">
-                                <Building2 className="h-10 w-10 opacity-20" />
+                            {canEdit && (
+                              <div
+                                className="flex gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) => handleEditOpenPlot(plot, e)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) =>
+                                    openDeleteDialog("plot", plot._id, e)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             )}
                           </div>
 
-                          <CardContent className="p-4">
-                            {/* ---------- HEADER ---------- */}
-                            <div className="flex justify-between items-start mb-1">
-                              <h3 className="font-semibold text-lg">
-                                {plot.projectName} — {plot.openPlotNo}
-                              </h3>
+                          {/* ---------- LOCATION ---------- */}
+                          <div className="flex items-center text-sm text-muted-foreground mb-3">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {plot.location || "Location not specified"}
+                          </div>
 
-                              {canEdit && (
-                                <div
-                                  className="flex gap-1"
-                                  onClick={(e) => e.stopPropagation()}
+                          {/* ---------- LAND DETAILS ---------- */}
+                          <div className="space-y-2 mb-4 text-sm">
+                            <div className="flex justify-between">
+                              <span>Total Area</span>
+                              <span>
+                                {plot.totalArea} {plot.areaUnit}
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between">
+                              <span>Facing</span>
+                              <span>{plot.facing || "—"}</span>
+                            </div>
+
+                            <div className="flex justify-between">
+                              <span>Road Width</span>
+                              <span>
+                                {plot.roadWidthFt
+                                  ? `${plot.roadWidthFt} ft`
+                                  : "—"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* ---------- LEGAL / STATUS ---------- */}
+                          <div className="border-t pt-3 text-sm space-y-2">
+                            <div className="flex justify-between">
+                              <span>Status</span>
+                              <span>{plot.status}</span>
+                            </div>
+
+                            <div className="flex justify-between">
+                              <span>Title</span>
+                              <span>{plot.titleStatus}</span>
+                            </div>
+
+                            <div className="flex justify-between">
+                              <span>Approval</span>
+                              <span>{plot.approvalAuthority || "—"}</span>
+                            </div>
+                          </div>
+
+                          {/* ---------- ACTION ---------- */}
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/properties/openplot/${plot._id}`);
+                              }}
+                            >
+                              View Details
+                            </Button>
+                            {plot?.brochureUrl && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={(e) =>
+                                    handleDownload(
+                                      e,
+                                      plot?.brochureUrl!,
+                                      plot?.projectName,
+                                    )
+                                  }
+                                  title="Download Brochure"
                                 >
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={(e) => handleEditOpenPlot(plot, e)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={(e) =>
-                                      openDeleteDialog("plot", plot._id, e)
-                                    }
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* ---------- LOCATION ---------- */}
-                            <div className="flex items-center text-sm text-muted-foreground mb-3">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              {plot.location || "Location not specified"}
-                            </div>
-
-                            {/* ---------- LAND DETAILS ---------- */}
-                            <div className="space-y-2 mb-4 text-sm">
-                              <div className="flex justify-between">
-                                <span>Total Area</span>
-                                <span>
-                                  {plot.totalArea} {plot.areaUnit}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span>Facing</span>
-                                <span>{plot.facing || "—"}</span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span>Road Width</span>
-                                <span>
-                                  {plot.roadWidthFt
-                                    ? `${plot.roadWidthFt} ft`
-                                    : "—"}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* ---------- LEGAL / STATUS ---------- */}
-                            <div className="border-t pt-3 text-sm space-y-2">
-                              <div className="flex justify-between">
-                                <span>Status</span>
-                                <span>{plot.status}</span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span>Title</span>
-                                <span>{plot.titleStatus}</span>
-                              </div>
-
-                              <div className="flex justify-between">
-                                <span>Approval</span>
-                                <span>{plot.approvalAuthority || "—"}</span>
-                              </div>
-                            </div>
-
-                            {/* ---------- ACTION ---------- */}
-                            <div className="flex gap-2 mt-4">
-                              <Button
-                                size="sm"
-                                className="flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedOpenPlot(plot);
-                                }}
-                              >
-                                View Details
-                              </Button>
-                              {plot?.brochureUrl && (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={(e) =>
-                                      handleDownload(
-                                        e,
-                                        plot?.brochureUrl!,
-                                        plot?.projectName,
-                                      )
-                                    }
-                                    title="Download Brochure"
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                  {/* <Button
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                                {/* <Button
                                     variant="outline"
                                     size="icon"
                                     onClick={(e) =>
@@ -982,166 +948,168 @@ const NewProperties = () => {
                                   >
                                     <Share2 className="h-4 w-4" />
                                   </Button> */}
-                                </div>
-                              )}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* ---------- Open Lands Section ---------- */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-semibold">Open Land</h2>
+              <div />
+            </div>
+
+            <Card>
+              <CardContent className="p-6">
+                {openLandData?.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-lg font-semibold mb-2">
+                      No open Land found
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Add open Land using the button above.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {openLandData?.map((land) => (
+                      <Card
+                        key={land?._id}
+                        onClick={() =>
+                          navigate(`/properties/openland/${land._id}`)
+                        }
+                        className="overflow-hidden hover:shadow-lg transition cursor-pointer"
+                      >
+                        <div className="relative">
+                          {land?.thumbnailUrl ? (
+                            <img
+                              src={land?.thumbnailUrl}
+                              alt={land?.projectName}
+                              className="h-48 w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-48 bg-muted flex items-center justify-center">
+                              <Building2 className="h-10 w-10 opacity-20" />
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </section>
+                          )}
+                        </div>
 
-            {/* ---------- Open Lands Section ---------- */}
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold">Open Land</h2>
-                <div />
-              </div>
-
-              <Card>
-                <CardContent className="p-6">
-                  {openLandData?.length === 0 ? (
-                    <div className="text-center py-12">
-                      <h3 className="text-lg font-semibold mb-2">
-                        No open Land found
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Add open Land using the button above.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {openLandData?.map((land) => (
-                        <Card
-                          key={land?._id}
-                          onClick={() => setSelectedOpenLand(land)}
-                          className="overflow-hidden hover:shadow-lg transition cursor-pointer"
-                        >
-                          <div className="relative">
-                            {land?.thumbnailUrl ? (
-                              <img
-                                src={land?.thumbnailUrl}
-                                alt={land?.projectName}
-                                className="h-48 w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-48 bg-muted flex items-center justify-center">
-                                <Building2 className="h-10 w-10 opacity-20" />
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-1">
+                            <h3 className="font-semibold text-lg">
+                              {land?.projectName} — {land?.surveyNumber}
+                            </h3>
+                            {canEdit && (
+                              <div
+                                className="flex gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) => handleEditOpenLand(land, e)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={(e) =>
+                                    openDeleteDialog("land", land?._id!, e)
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             )}
                           </div>
 
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start mb-1">
-                              <h3 className="font-semibold text-lg">
-                                {land?.projectName} — {land?.surveyNumber}
-                              </h3>
-                              {canEdit && (
-                                <div
-                                  className="flex gap-1"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={(e) => handleEditOpenLand(land, e)}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={(e) =>
-                                      openDeleteDialog("land", land?._id!, e)
-                                    }
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="flex items-center text-sm text-muted-foreground mb-3">
-                              <MapPin className="h-4 w-4 mr-1" />{" "}
-                              {land?.googleMapsLocation ? (
-                                <a
-                                  className="underline"
-                                  href={land?.googleMapsLocation}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  View on map
-                                </a>
-                              ) : (
-                                land?.projectName
-                              )}
-                            </div>
-
-                            <div className="space-y-2 mb-4 text-sm">
-                              <div className="flex justify-between">
-                                <span>Land Type</span>
-                                <span>{land?.landType}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Facing</span>
-                                <span>{land?.facing}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Land Area</span>
-                                <span>
-                                  {land?.landArea}/{land?.areaUnit}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="border-t pt-3 text-sm space-y-2">
-                              <div className="flex justify-between">
-                                <span>Availability</span>
-                                <span>
-                                  {land?.availableDate
-                                    ? new Date(
-                                        land?.availableDate,
-                                      ).toLocaleDateString("en-IN", {
-                                        day: "2-digit",
-                                        month: "short",
-                                        year: "numeric",
-                                      })
-                                    : "—"}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex gap-2 mt-4">
-                              <Button
-                                size="sm"
-                                className="flex-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedOpenLand(land);
-                                }}
+                          <div className="flex items-center text-sm text-muted-foreground mb-3">
+                            <MapPin className="h-4 w-4 mr-1" />{" "}
+                            {land?.googleMapsLocation ? (
+                              <a
+                                className="underline"
+                                href={land?.googleMapsLocation}
+                                target="_blank"
+                                rel="noreferrer"
                               >
-                                View Land Details
-                              </Button>
-                              {land?.brochureUrl && (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={(e) =>
-                                      handleDownload(
-                                        e,
-                                        land?.brochureUrl!,
-                                        land?.projectName,
-                                      )
-                                    }
-                                    title="Download Brochure"
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                  {/* <Button
+                                View on map
+                              </a>
+                            ) : (
+                              land?.projectName
+                            )}
+                          </div>
+
+                          <div className="space-y-2 mb-4 text-sm">
+                            <div className="flex justify-between">
+                              <span>Land Type</span>
+                              <span>{land?.landType}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Facing</span>
+                              <span>{land?.facing}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Land Area</span>
+                              <span>
+                                {land?.landArea}/{land?.areaUnit}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="border-t pt-3 text-sm space-y-2">
+                            <div className="flex justify-between">
+                              <span>Availability</span>
+                              <span>
+                                {land?.availableDate
+                                  ? new Date(
+                                      land?.availableDate,
+                                    ).toLocaleDateString("en-IN", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                  : "—"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2 mt-4">
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/properties/openland/${land._id}`);
+                              }}
+                            >
+                              View Land Details
+                            </Button>
+                            {land?.brochureUrl && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={(e) =>
+                                    handleDownload(
+                                      e,
+                                      land?.brochureUrl!,
+                                      land?.projectName,
+                                    )
+                                  }
+                                  title="Download Brochure"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                                {/* <Button
                                     variant="outline"
                                     size="icon"
                                     onClick={(e) =>
@@ -1155,19 +1123,18 @@ const NewProperties = () => {
                                   >
                                     <Share2 className="h-4 w-4" />
                                   </Button> */}
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </section>
-          </>
-        )}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        </>
       </div>
 
       {/* Dialogs */}

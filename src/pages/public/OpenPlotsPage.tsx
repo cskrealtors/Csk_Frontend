@@ -30,7 +30,6 @@ const OpenPlotsPage = () => {
 
   if (openPlotsError) {
     toast.error(openPlotsErr.message);
-    console.log("Upcoming properties error:", openPlotsErr);
   }
 
   const amenities = [

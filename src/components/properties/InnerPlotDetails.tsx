@@ -51,7 +51,6 @@ export function getInnerPlotStatusBadge(status: string) {
 
 export function InnerPlotDetails() {
   const { _id } = useParams<{ _id: string }>();
-  console.log("inner _id", _id);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
