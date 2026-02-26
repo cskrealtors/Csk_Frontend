@@ -261,11 +261,9 @@ const BuildingDetails = () => {
 
   if (buildError) {
     toast.error(buildErr?.message || "Failed to fetch building");
-    console.log("Failed to fetch building", buildErr);
   }
   if (floorsError) {
     toast.error(floorsErr?.message || "Failed to fetch floors");
-    console.log("Failed to fetch floors", floorsErr);
   }
 
   // Loading state

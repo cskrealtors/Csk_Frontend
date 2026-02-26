@@ -263,7 +263,6 @@ export function OpenPlotDetails({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {innerPlots.map((inner, idx) => {
-                console.log("inner plots ", inner);
                 return (
                   <Card
                     key={inner._id || idx}
