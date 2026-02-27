@@ -251,13 +251,13 @@ const LeadManagement = () => {
       typeof lead.property === "object" ? lead.property?._id : lead.property;
     const leadUnit = lead.unit as Property;
     const propertySearchName = leadUnit
-      ? `${leadUnit.projectName} - ${leadUnit.plotNo}`
+      ? `${leadUnit?.projectName} - ${leadUnit?.plotNo}`
       : leadPropertyId || "";
 
     const matchesSearch =
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      propertySearchName.toLowerCase().includes(searchTerm.toLowerCase());
+      lead?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      propertySearchName?.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (activeTab === "all") return matchesSearch;
     return matchesSearch && lead.status === activeTab;
@@ -803,18 +803,18 @@ const LeadManagement = () => {
                       )}&background=1A365D&color=fff&size=80`}
                     />
                     <AvatarFallback>
-                      {selectedLead.name?.[0] || "N/A"}
+                      {selectedLead?.name?.[0] || "N/A"}
                     </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1 space-y-2">
                     <h3 className="text-xl font-semibold">
-                      {selectedLead.name}
+                      {selectedLead?.name || "N/A"}
                     </h3>
 
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="outline">
-                        Lead: {selectedLead.status}
+                        Lead: {selectedLead?.status || "N/A"}
                       </Badge>
 
                       <Badge
@@ -824,12 +824,12 @@ const LeadManagement = () => {
                             : "bg-blue-100 text-blue-800"
                         }
                       >
-                        Property: {selectedLead.propertyStatus}
+                        Property: {selectedLead?.propertyStatus || "N/A"}
                       </Badge>
                     </div>
 
                     <p className="text-sm text-muted-foreground">
-                      Source: {selectedLead.source || "N/A"}
+                      Source: {selectedLead?.source || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -840,8 +840,8 @@ const LeadManagement = () => {
                     Contact Information
                   </h4>
                   <div className="space-y-2 text-sm">
-                    <div>Email: {selectedLead.email || "N/A"}</div>
-                    <div>Phone: {selectedLead.phone || "N/A"}</div>
+                    <div>Email: {selectedLead?.email || "N/A"}</div>
+                    <div>Phone: {selectedLead?.phone || "N/A"}</div>
                   </div>
                 </div>
 
@@ -855,8 +855,8 @@ const LeadManagement = () => {
                       <div>
                         <p className="text-muted-foreground">Project</p>
                         <p className="font-medium">
-                          {typeof selectedLead.property === "object"
-                            ? selectedLead.property?.projectName || "N/A"
+                          {typeof selectedLead?.property === "object"
+                            ? selectedLead?.property?.projectName || "N/A"
                             : "N/A"}
                         </p>
                       </div>
@@ -864,8 +864,8 @@ const LeadManagement = () => {
                       <div>
                         <p className="text-muted-foreground">Location</p>
                         <p className="font-medium">
-                          {typeof selectedLead.property === "object"
-                            ? selectedLead.property?.location || "N/A"
+                          {typeof selectedLead?.property === "object"
+                            ? selectedLead?.property?.location || "N/A"
                             : "N/A"}
                         </p>
                       </div>
@@ -873,8 +873,8 @@ const LeadManagement = () => {
                       <div>
                         <p className="text-muted-foreground">Property Type</p>
                         <p className="font-medium">
-                          {typeof selectedLead.property === "object"
-                            ? selectedLead.property?.propertyType || "N/A"
+                          {typeof selectedLead?.property === "object"
+                            ? selectedLead?.property?.propertyType || "N/A"
                             : "N/A"}
                         </p>
                       </div>
@@ -882,8 +882,8 @@ const LeadManagement = () => {
                       <div>
                         <p className="text-muted-foreground">Floor</p>
                         <p className="font-medium">
-                          {typeof selectedLead.floorUnit === "object"
-                            ? (selectedLead.floorUnit?.floorNumber ?? "N/A")
+                          {typeof selectedLead?.floorUnit === "object"
+                            ? (selectedLead?.floorUnit?.floorNumber ?? "N/A")
                             : "N/A"}
                         </p>
                       </div>
@@ -891,8 +891,8 @@ const LeadManagement = () => {
                       <div>
                         <p className="text-muted-foreground">Unit</p>
                         <p className="font-medium">
-                          {typeof selectedLead.unit === "object"
-                            ? selectedLead.unit?.plotNo || "N/A"
+                          {typeof selectedLead?.unit === "object"
+                            ? selectedLead?.unit?.plotNo || "N/A"
                             : "N/A"}
                         </p>
                       </div>
@@ -907,19 +907,19 @@ const LeadManagement = () => {
                     <p>
                       Added By:{" "}
                       <span className="font-medium">
-                        {selectedLead.addedBy?.name || "N/A"}
+                        {selectedLead?.addedBy?.name || "N/A"}
                       </span>
                     </p>
                     <p>
                       Role:{" "}
                       <span className="font-medium">
-                        {selectedLead.addedBy?.role || "N/A"}
+                        {selectedLead?.addedBy?.role || "N/A"}
                       </span>
                     </p>
                     <p>
                       Created On:{" "}
-                      {selectedLead.createdAt
-                        ? new Date(selectedLead.createdAt).toLocaleDateString(
+                      {selectedLead?.createdAt
+                        ? new Date(selectedLead?.createdAt).toLocaleDateString(
                             "en-IN",
                           )
                         : "N/A"}
@@ -935,13 +935,13 @@ const LeadManagement = () => {
                   <div className="space-y-1 text-sm">
                     <p>
                       Last Contact:{" "}
-                      {selectedLead.lastContact
+                      {selectedLead?.lastContact
                         ? format(new Date(selectedLead.lastContact), "PPP")
                         : "N/A"}
                     </p>
                     <p>
                       Last Updated:{" "}
-                      {selectedLead.updatedAt
+                      {selectedLead?.updatedAt
                         ? format(new Date(selectedLead.updatedAt), "PPP")
                         : "N/A"}
                     </p>
@@ -952,7 +952,7 @@ const LeadManagement = () => {
                 <div>
                   <h4 className="text-sm font-semibold mb-2">Notes</h4>
                   <p className="text-sm text-muted-foreground">
-                    {selectedLead.notes || "No notes added."}
+                    {selectedLead?.notes || "No notes added."}
                   </p>
                 </div>
               </div>
