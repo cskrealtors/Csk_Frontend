@@ -132,6 +132,7 @@ const MyCommissions = () => {
       const { data } = await axios.post(
         `${import.meta.env.VITE_URL}/api/commission/addCommissions`,
         newCommission,
+        { withCredentials: true },
       );
       return data;
     },
@@ -164,6 +165,7 @@ const MyCommissions = () => {
           updatedCommissionData._id
         }`,
         updatedCommissionData,
+        { withCredentials: true },
       );
       return data;
     },
@@ -1060,7 +1062,8 @@ const MyCommissions = () => {
           open={isAddEditDialogOpen}
           onOpenChange={setIsAddEditDialogOpen}
         >
-          <DialogContent className="md:w-[600px] w-[90vw] max-h-[80vh] overflow-scroll rounded-xl">
+          <DialogContent onInteractOutside={(e) => e.preventDefault()}
+  onPointerDownOutside={(e) => e.preventDefault()} className="md:w-[600px] w-[90vw] max-h-[80vh] overflow-scroll rounded-xl">
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? "Edit Commission" : "Add New Commission"}
