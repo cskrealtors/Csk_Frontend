@@ -9,11 +9,11 @@ import { useVehicles } from "../CarAllocation";
 import Loader from "@/components/Loader";
 import { toast } from "sonner";
 import axios from "axios";
-import { TeamMember } from "../TeamManagement";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import MainLayout from "@/components/layout/MainLayout";
 import { useNavigate } from "react-router-dom";
+import { TeamMember } from "@/utils/leads/LeadConfig";
 
 const TeamLeadDashboard = () => {
   const [noOfVehicles, setNoOfVehicles] = useState(0);
@@ -57,7 +57,7 @@ const TeamLeadDashboard = () => {
     );
 
     return res.data.filter((v: any) => v.status === "pending");
-  };  
+  };
 
   const {
     data: pendingVisits,

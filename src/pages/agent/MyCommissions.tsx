@@ -98,7 +98,6 @@ const MyCommissions = () => {
   } = useQuery<Commission[], Error>({
     queryKey: ["commissions"],
     queryFn: fetchAllCommission,
-    staleTime: 10 * 60 * 1000,
   });
 
   const {
@@ -126,11 +125,13 @@ const MyCommissions = () => {
 
   const addCommissionMutation = useMutation({
     mutationFn: async (
-      newCommission: Omit<Commission, "_id" | "clientId"> & { clientId: string }
+      newCommission: Omit<Commission, "_id" | "clientId"> & {
+        clientId: string;
+      },
     ) => {
       const { data } = await axios.post(
         `${import.meta.env.VITE_URL}/api/commission/addCommissions`,
-        newCommission
+        newCommission,
       );
       return data;
     },
@@ -144,7 +145,7 @@ const MyCommissions = () => {
       toast.error(
         `Failed to add commission: ${
           error.response?.data?.message || error.message
-        }`
+        }`,
       );
     },
   });
@@ -152,8 +153,8 @@ const MyCommissions = () => {
   const updateCommissionMutation = useMutation({
     mutationFn: async (updatedCommissionData: {
       _id: string;
-      commissionAmount: string;
-      commissionPercent: string;
+      commissionAmount: number;
+      commissionPercent: number;
       saleDate: string;
       paymentDate: string | null;
       status: "pending" | "paid";
@@ -162,7 +163,7 @@ const MyCommissions = () => {
         `${import.meta.env.VITE_URL}/api/commission/updateCommissions/${
           updatedCommissionData._id
         }`,
-        updatedCommissionData
+        updatedCommissionData,
       );
       return data;
     },
@@ -175,7 +176,7 @@ const MyCommissions = () => {
       toast.error(
         `Failed to update commission: ${
           error.response?.data?.message || error.message
-        }`
+        }`,
       );
     },
   });
@@ -199,13 +200,13 @@ const MyCommissions = () => {
   }
 
   const userCanAddUser = rolePermissions?.permissions.some(
-    (per) => per.submodule === "Commissions" && per.actions.write
+    (per) => per.submodule === "Commissions" && per.actions.write,
   );
   const userCanEditUser = rolePermissions?.permissions.some(
-    (per) => per.submodule === "Commissions" && per.actions.edit
+    (per) => per.submodule === "Commissions" && per.actions.edit,
   );
   const userCanDeleteUser = rolePermissions?.permissions.some(
-    (per) => per.submodule === "Commissions" && per.actions.delete
+    (per) => per.submodule === "Commissions" && per.actions.delete,
   );
 
   const actualCommissions: Commission[] = commissions || [];
@@ -214,14 +215,14 @@ const MyCommissions = () => {
 
   const totalEarned = actualCommissions.reduce((sum, commission) => {
     if (commission.status === "paid") {
-      return sum + parseFloat(commission.commissionAmount.replace(/[₹,]/g, ""));
+      return sum + commission.commissionAmount;
     }
     return sum;
   }, 0);
 
   const pendingAmount = actualCommissions.reduce((sum, commission) => {
     if (commission.status === "pending") {
-      return sum + parseFloat(commission.commissionAmount.replace(/[₹,]/g, ""));
+      return sum + commission.commissionAmount;
     }
     return sum;
   }, 0);
@@ -238,7 +239,7 @@ const MyCommissions = () => {
       format(saleDate, "MMMM") === currentMonth &&
       format(saleDate, "yyyy") === currentYear
     ) {
-      return sum + parseFloat(commission.commissionAmount.replace(/[₹,]/g, ""));
+      return sum + commission.commissionAmount;
     }
     return sum;
   }, 0);
@@ -254,7 +255,7 @@ const MyCommissions = () => {
       format(saleDate, "MMMM") === lastMonthName &&
       format(saleDate, "yyyy") === lastMonthYear
     ) {
-      return sum + parseFloat(commission.commissionAmount.replace(/[₹,]/g, ""));
+      return sum + commission.commissionAmount;
     }
     return sum;
   }, 0);
@@ -270,25 +271,29 @@ const MyCommissions = () => {
       .length,
   };
 
-  const monthlySummaryMap = actualCommissions.reduce((acc, commission) => {
-    const saleDate = new Date(commission.saleDate);
-    const monthYear = format(saleDate, "MMMMyyyy");
-    const monthOnly = format(saleDate, "MMMM");
+  const monthlySummaryMap = actualCommissions.reduce(
+    (acc, commission) => {
+      const saleDate = new Date(commission.saleDate);
+      const monthYear = format(saleDate, "MMMMyyyy");
+      const monthOnly = format(saleDate, "MMMM");
 
-    if (!acc[monthYear]) {
-      acc[monthYear] = {
-        month: monthOnly,
-        sales: 0,
-        amount: 0,
-        sortDate: saleDate,
-      };
-    }
-    acc[monthYear].sales += 1;
-    acc[monthYear].amount += parseFloat(
-      commission.commissionAmount.replace(/[₹,]/g, "")
-    );
-    return acc;
-  }, {} as Record<string, { month: string; sales: number; amount: number; sortDate: Date }>);
+      if (!acc[monthYear]) {
+        acc[monthYear] = {
+          month: monthOnly,
+          sales: 0,
+          amount: 0,
+          sortDate: saleDate,
+        };
+      }
+      acc[monthYear].sales += 1;
+      acc[monthYear].amount += commission.commissionAmount;
+      return acc;
+    },
+    {} as Record<
+      string,
+      { month: string; sales: number; amount: number; sortDate: Date }
+    >,
+  );
 
   const monthlySummary = Object.values(monthlySummaryMap)
     .sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime())
@@ -303,10 +308,12 @@ const MyCommissions = () => {
     return amount > max ? amount : max;
   }, 0);
 
-  const filteredCommissions = actualCommissions.filter((commission) => {
-    if (activeTab === "all") return true;
-    return commission.status === activeTab;
-  });
+  const filteredCommissions = actualCommissions
+    .filter((commission) => commission.clientId)
+    .filter((commission) => {
+      if (activeTab === "all") return true;
+      return commission.status === activeTab;
+    });
 
   const handleDownloadReport = () => {
     if (!filteredCommissions || filteredCommissions.length === 0) {
@@ -330,18 +337,18 @@ const MyCommissions = () => {
     const csvRows = filteredCommissions.map((commission) => {
       const saleDateFormatted = format(
         new Date(commission.saleDate),
-        "yyyy-MM-dd"
+        "yyyy-MM-dd",
       );
       const paymentDateFormatted = commission.paymentDate
         ? format(new Date(commission.paymentDate), "yyyy-MM-dd")
         : "N/A";
 
       return [
-        `"${commission.clientId.addedBy.name}"`, // Access client name from populated Lead's addedBy
-        `"${commission.clientId.property?.projectName}"`, // Access property name from populated Lead's property
+        `"${commission.clientId?.addedBy?.name ?? "N/A"}"`, // Access client name from populated Lead's addedBy
+        `"${commission.clientId?.property?.projectName ?? "N/A"}"`, // Access property name from populated Lead's property
         `"${commission.clientId.unit?.plotNo}"`,
         `"${commission.clientId?.unit?.totalAmount.toLocaleString("en-IN")}"`,
-        `"${commission.commissionAmount}"`,
+        `"₹${parseFloat(commission.commissionAmount.toString()).toLocaleString("en-IN")}"`,
         `"${commission.commissionPercent}"`,
         `"${saleDateFormatted}"`,
         `"${paymentDateFormatted}"`,
@@ -359,8 +366,8 @@ const MyCommissions = () => {
       "download",
       `commissions_report_${activeTab}_${format(
         new Date(),
-        "yyyyMMdd_HHmmss"
-      )}.csv`
+        "yyyyMMdd_HHmmss",
+      )}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -388,12 +395,8 @@ const MyCommissions = () => {
     setCommissionFormData({
       _id: commission._id,
       clientId: commission.clientId._id,
-      commissionAmount: parseFloat(
-        commission.commissionAmount.replace(/[₹,]/g, "")
-      ).toString(),
-      commissionPercent: parseFloat(
-        commission.commissionPercent.replace(/%/, "")
-      ).toString(),
+      commissionAmount: commission.commissionAmount.toString(),
+      commissionPercent: commission.commissionPercent.toString(),
       saleDate: new Date(commission.saleDate),
       paymentDate: commission.paymentDate
         ? new Date(commission.paymentDate)
@@ -420,7 +423,7 @@ const MyCommissions = () => {
 
   const handleDateChange = (
     date: Date | undefined,
-    field: "saleDate" | "paymentDate"
+    field: "saleDate" | "paymentDate",
   ) => {
     setCommissionFormData((prev) => ({
       ...prev,
@@ -463,10 +466,8 @@ const MyCommissions = () => {
     }
 
     const formattedPayload = {
-      commissionAmount: `₹${parseFloat(
-        commissionFormData.commissionAmount
-      ).toLocaleString("en-IN")}`,
-      commissionPercent: `${parseFloat(commissionFormData.commissionPercent)}%`,
+      commissionAmount: parseFloat(commissionFormData.commissionAmount),
+      commissionPercent: parseFloat(commissionFormData.commissionPercent),
       saleDate: commissionFormData.saleDate.toISOString(),
       paymentDate: commissionFormData.paymentDate
         ? commissionFormData.paymentDate.toISOString()
@@ -477,12 +478,20 @@ const MyCommissions = () => {
     if (isEditing) {
       updateCommissionMutation.mutate({
         _id: commissionFormData._id,
-        ...formattedPayload,
+        commissionAmount: formattedPayload.commissionAmount,
+        commissionPercent: formattedPayload.commissionPercent,
+        saleDate: formattedPayload.saleDate,
+        paymentDate: formattedPayload.paymentDate,
+        status: formattedPayload.status,
       });
     } else {
       addCommissionMutation.mutate({
         clientId: commissionFormData.clientId,
-        ...formattedPayload,
+        commissionAmount: formattedPayload.commissionAmount,
+        commissionPercent: formattedPayload.commissionPercent,
+        saleDate: commissionFormData.saleDate,
+        paymentDate: commissionFormData.paymentDate,
+        status: formattedPayload.status,
       });
     }
   };
@@ -521,10 +530,10 @@ const MyCommissions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {commissionSummary.totalEarned}
+                {commissionSummary?.totalEarned}
               </div>
               <p className="text-xs text-muted-foreground">
-                From {commissionSummary.totalSales} property sales
+                From {commissionSummary?.totalSales} property sales
               </p>
             </CardContent>
           </Card>
@@ -536,12 +545,12 @@ const MyCommissions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {commissionSummary.pendingAmount}
+                {commissionSummary?.pendingAmount}
               </div>
               <div className="flex items-center pt-1 text-estate-gold">
                 <ArrowUpRight className="mr-1 h-4 w-4" />
                 <span className="text-xs">
-                  From {commissionSummary.pendingTransactions} pending
+                  From {commissionSummary?.pendingTransactions} pending
                   transactions
                 </span>
               </div>
@@ -554,15 +563,12 @@ const MyCommissions = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {commissionSummary.thisMonth}
+                {commissionSummary?.thisMonth}
               </div>
               <div className="flex items-center pt-1 text-estate-success">
                 <ArrowUpRight className="mr-1 h-4 w-4" />
                 <span className="text-xs">
-                  {parseFloat(
-                    commissionSummary.thisMonth.replace(/[₹,]/g, "")
-                  ) >
-                  parseFloat(commissionSummary.lastMonth.replace(/[₹,]/g, ""))
+                  {thisMonthEarned > lastMonthEarned
                     ? "+ Increased"
                     : "- Decreased"}{" "}
                   from last month
@@ -586,8 +592,9 @@ const MyCommissions = () => {
                 {monthlySummary.map((month, i) => {
                   const normalizedValue =
                     maxAmountForChart > 0
-                      ? parseFloat(month.amount.replace(/[^\d]/g, "")) /
-                        maxAmountForChart
+                      ? parseFloat(
+                          month?.amount?.replace(/[^\d]/g, "") || "0",
+                        ) / maxAmountForChart
                       : 0;
                   const barHeight = `${Math.max(normalizedValue * 80, 10)}%`;
 
@@ -601,12 +608,12 @@ const MyCommissions = () => {
                         style={{ height: barHeight }}
                       ></div>
                       <div className="mt-2 text-center">
-                        <p className="font-medium">{month.month}</p>
+                        <p className="font-medium">{month?.month}</p>
                         <p className="text-xs text-muted-foreground">
-                          {month.amount}
+                          {month?.amount}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {month.sales} {month.sales === 1 ? "sale" : "sales"}
+                          {month?.sales} {month?.sales === 1 ? "sale" : "sales"}
                         </p>
                       </div>
                     </div>
@@ -664,103 +671,109 @@ const MyCommissions = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredCommissions.length > 0 ? (
-                      filteredCommissions.map((commission) => (
-                        <TableRow key={commission._id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage
-                                  src={
-                                    commission.clientId?.addedBy?.avatar || ""
-                                  }
-                                />
-                                <AvatarFallback>
-                                  {commission.clientId?.addedBy?.name
-                                    ? commission.clientId?.addedBy.name[0]
-                                    : "N/A"}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">
-                                {commission.clientId?.addedBy?.name || "N/A"}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p>
-                                {commission.clientId.property?.projectName ||
-                                  "N/A"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Unit:{" "}
-                                {commission.clientId.unit?.plotNo || "N/A"}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {commission.commissionAmount}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {commission.commissionPercent} of ₹
-                                {(
-                                  commission.clientId.unit?.totalAmount || 0
-                                ).toLocaleString("en-IN")}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {commission.saleDate
-                              ? format(
-                                  new Date(commission.saleDate),
-                                  "MMM d, yyyy"
-                                )
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                commission.status === "paid"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }
-                            >
-                              {commission.status === "paid"
-                                ? "Paid"
-                                : "Pending"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  setSelectedCommission(commission)
+                      filteredCommissions.map((commission) => {
+                        const lead = commission.clientId;
+
+                        const clientName = lead?.addedBy?.name ?? "N/A";
+                        const clientAvatar = lead?.addedBy?.avatar ?? "";
+                        const propertyName =
+                          lead?.property?.projectName ?? "N/A";
+                        const unitNo = lead?.unit?.plotNo ?? "N/A";
+                        return (
+                          <TableRow key={commission._id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={clientAvatar} />
+                                  <AvatarFallback>
+                                    {clientName[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium">
+                                  {clientName}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p>
+                                  {commission?.clientId?.property
+                                    ?.projectName || "N/A"}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Unit:{" "}
+                                  {commission?.clientId?.unit?.plotNo || "N/A"}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">
+                                  ₹
+                                  {commission?.commissionAmount?.toLocaleString(
+                                    "en-IN",
+                                  )}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {commission?.commissionPercent} of ₹
+                                  {(
+                                    commission?.clientId?.unit?.totalAmount || 0
+                                  ).toLocaleString("en-IN")}
+                                </p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              {commission.saleDate
+                                ? format(
+                                    new Date(commission?.saleDate),
+                                    "MMM d, yyyy",
+                                  )
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  commission.status === "paid"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-yellow-100 text-yellow-800"
                                 }
                               >
-                                <Info className="h-4 w-4" />
-                                <span className="sr-only">View Details</span>
-                              </Button>
-                              {userCanEditUser && (
+                                {commission?.status === "paid"
+                                  ? "Paid"
+                                  : "Pending"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() =>
-                                    handleEditCommissionClick(commission)
+                                    setSelectedCommission(commission)
                                   }
                                 >
-                                  <Edit className="h-4 w-4" />
-                                  <span className="sr-only">
-                                    Edit Commission
-                                  </span>
+                                  <Info className="h-4 w-4" />
+                                  <span className="sr-only">View Details</span>
                                 </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                                {userCanEditUser && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleEditCommissionClick(commission)
+                                    }
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                    <span className="sr-only">
+                                      Edit Commission
+                                    </span>
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     ) : (
                       <TableRow>
                         <TableCell
@@ -786,40 +799,46 @@ const MyCommissions = () => {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-6 w-6">
                           <AvatarImage
-                            src={commission.clientId.addedBy?.avatar || ""}
+                            src={
+                              commission?.clientId.addedBy
+                                ? commission?.clientId.addedBy?.avatar
+                                : ""
+                            }
                           />
                           <AvatarFallback>
-                            {commission.clientId.addedBy?.name
-                              ? commission.clientId.addedBy.name[0]
+                            {commission?.clientId.addedBy
+                              ? commission?.clientId.addedBy.name[0]
                               : "N/A"}
                           </AvatarFallback>
                         </Avatar>
                         <span className="font-medium">
-                          {commission.clientId.addedBy?.name || "N/A"}
+                          {commission?.clientId?.addedBy
+                            ? commission?.clientId.addedBy?.avatar
+                            : "N/A"}
                         </span>
                       </div>
 
                       <div>
                         <span className="font-medium">Property:</span>{" "}
-                        {commission.clientId.property?.projectName || "N/A"}
+                        {commission?.clientId?.property?.projectName || "N/A"}
                         <p className="text-xs text-muted-foreground">
-                          Unit: {commission.clientId.unit?.plotNo || "N/A"}
+                          Unit: {commission?.clientId?.unit?.plotNo || "N/A"}
                         </p>
                       </div>
 
                       <div>
-                        <span className="font-medium">Commission:</span>{" "}
-                        {commission.commissionAmount} (
-                        {commission.commissionPercent} of ₹
+                        <span className="font-medium">Commission:</span> ₹
+                        {commission?.commissionAmount?.toLocaleString("en-IN")}{" "}
+                        ({commission?.commissionPercent} of ₹
                         {(
-                          commission.clientId.unit?.totalAmount || 0
+                          commission?.clientId?.unit?.totalAmount || 0
                         ).toLocaleString("en-IN")}
                         )
                       </div>
 
                       <div>
                         <span className="font-medium">Sale Date:</span>{" "}
-                        {commission.saleDate
+                        {commission?.saleDate
                           ? format(new Date(commission.saleDate), "MMM d, yyyy")
                           : "N/A"}
                       </div>
@@ -889,7 +908,7 @@ const MyCommissions = () => {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
                       <AvatarImage
-                        src={selectedCommission.clientId.addedBy?.avatar || ""}
+                        src={selectedCommission.clientId?.addedBy?.avatar ?? ""}
                       />
                       <AvatarFallback>
                         {selectedCommission.clientId.addedBy?.name
@@ -921,14 +940,14 @@ const MyCommissions = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Property</p>
                       <p className="font-medium">
-                        {selectedCommission.clientId.property?.projectName ||
+                        {selectedCommission?.clientId?.property?.projectName ||
                           "N/A"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Unit</p>
                       <p className="font-medium">
-                        {selectedCommission.clientId.unit?.plotNo || "N/A"}
+                        {selectedCommission?.clientId?.unit?.plotNo || "N/A"}
                       </p>
                     </div>
                     <div>
@@ -938,17 +957,17 @@ const MyCommissions = () => {
                       <p className="font-medium">
                         ₹
                         {(
-                          selectedCommission.clientId.unit?.totalAmount || 0
+                          selectedCommission?.clientId?.unit?.totalAmount || 0
                         ).toLocaleString("en-IN")}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Sale Date</p>
                       <p className="font-medium">
-                        {selectedCommission.saleDate
+                        {selectedCommission?.saleDate
                           ? format(
                               new Date(selectedCommission.saleDate),
-                              "MMMM d, yyyy"
+                              "MMMM d, yyyy",
                             )
                           : "N/A"}
                       </p>
@@ -964,7 +983,7 @@ const MyCommissions = () => {
                         Commission Rate
                       </p>
                       <p className="font-medium">
-                        {selectedCommission.commissionPercent}
+                        {selectedCommission.commissionPercent}%
                       </p>
                     </div>
                     <div>
@@ -972,7 +991,10 @@ const MyCommissions = () => {
                         Commission Amount
                       </p>
                       <p className="font-medium">
-                        {selectedCommission.commissionAmount}
+                        ₹
+                        {selectedCommission.commissionAmount.toLocaleString(
+                          "en-IN",
+                        )}
                       </p>
                     </div>
                     <div>
@@ -993,7 +1015,7 @@ const MyCommissions = () => {
                         <p className="font-medium">
                           {format(
                             new Date(selectedCommission.paymentDate),
-                            "MMMM d, yyyy"
+                            "MMMM d, yyyy",
                           )}
                         </p>
                       </div>
@@ -1011,7 +1033,7 @@ const MyCommissions = () => {
                       {selectedCommission.saleDate
                         ? format(
                             addDays(new Date(selectedCommission.saleDate), 15),
-                            "MMMM d, yyyy"
+                            "MMMM d, yyyy",
                           )
                         : "N/A"}
                     </p>
@@ -1067,8 +1089,8 @@ const MyCommissions = () => {
                           isLeadsLoading
                             ? "Loading leads..."
                             : actualCommissionEligibleLeads.length === 0
-                            ? "No eligible leads available"
-                            : "Select a client/property"
+                              ? "No eligible leads available"
+                              : "Select a client/property"
                         }
                       />
                     </SelectTrigger>
@@ -1089,8 +1111,7 @@ const MyCommissions = () => {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Only properties with a "Closed" status and no existing
-                    commission are shown.
+                    Only closed sales without an existing commission are shown.
                   </p>
                 </div>
               )}
@@ -1133,7 +1154,7 @@ const MyCommissions = () => {
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !commissionFormData.saleDate && "text-muted-foreground"
+                        !commissionFormData.saleDate && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1165,7 +1186,7 @@ const MyCommissions = () => {
                         className={cn(
                           "w-full justify-start text-left font-normal",
                           !commissionFormData.paymentDate &&
-                            "text-muted-foreground"
+                            "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1208,6 +1229,7 @@ const MyCommissions = () => {
 
               <DialogFooter className="mt-4">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsAddEditDialogOpen(false)}
                 >
@@ -1225,8 +1247,8 @@ const MyCommissions = () => {
                       ? "Saving..."
                       : "Save Changes"
                     : addCommissionMutation.isPending
-                    ? "Adding..."
-                    : "Add Commission"}
+                      ? "Adding..."
+                      : "Add Commission"}
                 </Button>
               </DialogFooter>
             </form>

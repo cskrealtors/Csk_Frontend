@@ -15,7 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { LineChart, DollarSign, Users, Target } from "lucide-react";
+import {
+  LineChart,
+  DollarSign,
+  Users,
+  Target,
+  IndianRupee,
+} from "lucide-react";
 
 /* ================= TYPES ================= */
 
@@ -178,7 +184,7 @@ const SalesManagerDashboard = () => {
             title="Total Sales"
             value={`₹ ${stats.totalSales / 100000}L`}
             trend={{ value: 0, isPositive: true }}
-            icon={<DollarSign className="h-6 w-6" />}
+            icon={<IndianRupee className="h-6 w-6" />}
           />
 
           <StatCard

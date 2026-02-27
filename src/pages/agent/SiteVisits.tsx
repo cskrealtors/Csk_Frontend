@@ -109,7 +109,7 @@ const SiteVisits = () => {
     isLoading: siteVisitsLoading,
     isError: siteVisitsError,
     error: siteVisitsFetchError,
-    refetch: refetchSiteVisits,
+    refetch,
   } = useQuery<SiteVisitData[]>({
     queryKey: ["siteVisits"],
     queryFn: fetchAllSiteVisits,
@@ -121,6 +121,7 @@ const SiteVisits = () => {
     isLoading: agentLoading,
     isError: agentError,
     error: agentErr,
+    refetch: refetchSiteVisits,
   } = useQuery<SiteVisitData[]>({
     queryKey: ["siteVisitOfAgent", user?._id],
     queryFn: fetchSiteVisitsOfAgent,
@@ -230,6 +231,7 @@ const SiteVisits = () => {
       setAdditionalNotes("");
       setPriority("medium"); // Reset priority
       refetchSiteVisits(); // Refetch all site visits after booking
+      refetch(); // Refetch agent's site visits if role is agent
     } catch (bookingError) {
       toast.error("Failed to schedule site visit.");
       console.error("Booking error:", bookingError);
