@@ -161,7 +161,7 @@ const TeamLeadManagement = () => {
   });
 
   const {
-    data: availableAgents,
+    data: availableAgentsRaw,
     isLoading: isTeamMemLoading,
     isError: teamMemError,
     error: isTeamMemErr,
@@ -290,6 +290,24 @@ const TeamLeadManagement = () => {
     userCanEditUser,
   } = useRBAC({ roleSubmodule: "Team Management" });
 
+  const availableAgents = (availableAgentsRaw ?? []).filter(
+    (agent): agent is User =>
+      !!agent &&
+      typeof agent === "object" &&
+      !!agent._id &&
+      !!agent.name &&
+      !!agent.email,
+  );
+
+  const safeTeamMembers = (teamMembers ?? []).filter(
+    (member): member is TeamMember =>
+      !!member &&
+      !!member._id &&
+      !!member.teamLeadId &&
+      !!member.teamLeadId.email &&
+      !!member.performance,
+  );
+
   if (isError) {
     toast.error("Failed to fetch Team");
     console.error("fetch error:", error);
@@ -371,7 +389,7 @@ const TeamLeadManagement = () => {
     }
   };
 
-  const sortedAndFilteredTeamMembers = teamMembers
+  const sortedAndFilteredTeamMembers = safeTeamMembers
     ?.filter((member) => {
       if (filterStatus === "all") return true;
       return member.status === filterStatus;
@@ -623,7 +641,7 @@ const TeamLeadManagement = () => {
                       <Phone className="mr-2 h-3 w-3" /> Call
                     </Button>
                     <a
-                      href={`mailto:${member.teamLeadId.email}`}
+                      href={`mailto:${member?.teamLeadId?.email}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1"

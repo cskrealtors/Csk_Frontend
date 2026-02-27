@@ -55,6 +55,7 @@ export interface Lead {
   lastContact: string;
   notes: string;
   createdAt: string;
+  updatedAt?: string;
   isPlotLead?: boolean;
   isLandLead?: boolean;
   isPropertyLead?: boolean;

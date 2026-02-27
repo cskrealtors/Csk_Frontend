@@ -14,8 +14,8 @@ export interface PopulatedLead extends Omit<Lead, "property" | "addedBy"> {
 export interface Commission {
   _id: string;
   clientId: PopulatedLead;
-  commissionAmount: string;
-  commissionPercent: string;
+  commissionAmount: number;
+  commissionPercent: number;
   saleDate: Date;
   paymentDate?: Date;
   status: "pending" | "paid";
@@ -30,7 +30,7 @@ export interface CommissionEligibleLead extends Lead {
 export const fetchAllCommission = async (): Promise<Commission[]> => {
   const { data } = await axios.get(
     `${import.meta.env.VITE_URL}/api/commission/getAllCommissions`,
-    { withCredentials: true }
+    { withCredentials: true },
   );
   return Array.isArray(data) ? data : [];
 };
@@ -40,7 +40,7 @@ export const fetchCommissionEligibleLeads = async (): Promise<
 > => {
   const { data } = await axios.get(
     `${import.meta.env.VITE_URL}/api/leads/getClosedLeads`,
-    { withCredentials: true }
+    { withCredentials: true },
   );
   return data.data || [];
 };

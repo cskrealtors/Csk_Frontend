@@ -17,12 +17,15 @@ import axios from "axios";
 import { formatDistanceToNow } from "date-fns"; // For notifications and older messages
 import { get, onValue, ref } from "firebase/database";
 import { db } from "@/config/firebaseConfig";
+import { useSocket } from "@/contexts/SocketContext";
+import { toast } from "sonner";
 
 const TopBar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0); // Renamed for clarity
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const { socket } = useSocket();
 
   const handleLogout = async () => {
     await logout(); // clear cookie + state
@@ -144,8 +147,8 @@ const TopBar = () => {
             userA === currentUserId
               ? userB
               : userB === currentUserId
-              ? userA
-              : null;
+                ? userA
+                : null;
 
           if (otherUserId) {
             const messagesArray = Object.entries(messagesInChat || {})
@@ -155,10 +158,10 @@ const TopBar = () => {
                 // Convert Firebase ServerTimestamp object to a number (milliseconds)
                 timestamp:
                   typeof msgVal.timestamp === "object" &&
-                  msgVal.timestamp !== null &&
-                  "seconds" in msgVal.timestamp
+                    msgVal.timestamp !== null &&
+                    "seconds" in msgVal.timestamp
                     ? msgVal.timestamp.seconds * 1000 +
-                      (msgVal.timestamp.nanoseconds || 0) / 1000000
+                    (msgVal.timestamp.nanoseconds || 0) / 1000000
                     : msgVal.timestamp,
               }))
               .sort((a, b) => a.timestamp - b.timestamp); // Sort to get the actual latest
@@ -213,6 +216,37 @@ const TopBar = () => {
     fetchUnreadNotificationCount();
     fetchUnreadNotifications();
   }, [userId]);
+
+  // --- Real-time Socket Notifications ---
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (data: { notification: any }) => {
+      const { notification } = data;
+      console.log("📩 New real-time notification:", notification);
+
+      // 1. Update unread count
+      setUnreadNotificationCount((prev) => prev + 1);
+
+      // 2. Add to notification list (at the top)
+      setNotifications((prev) => [notification, ...prev]);
+
+      // 3. Show a beautiful toast
+      toast.success(notification.title, {
+        description: notification.message,
+        action: {
+          label: "View",
+          onClick: () => console.log("Navigate to notifications"),
+        },
+      });
+    };
+
+    socket.on("newNotification", handleNewNotification);
+
+    return () => {
+      socket.off("newNotification", handleNewNotification);
+    };
+  }, [socket]);
 
   // --- Helper Functions ---
   const formatMessageTimestamp = (timestamp: number) => {

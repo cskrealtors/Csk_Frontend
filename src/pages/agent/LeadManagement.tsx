@@ -67,6 +67,7 @@ import OpenPlotLeadsTable from "./OpenPlotLeadsTable";
 import OpenLandLeadsTable from "./OpenLandLeadsTable";
 import PropertyLeadsTab from "./PropertyLeadsTab";
 import OpenLandLeadDialog from "./OpenLandLeadDialog";
+import { Badge } from "@/components/ui/badge";
 
 const LeadManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,18 +151,8 @@ const LeadManagement = () => {
     isError,
     error,
   } = useQuery<Lead[]>({
-    queryKey: [
-      "lead-management",
-      user?._id,
-      user?.role,
-      isSalesManager ? "all" : "self",
-    ],
-    queryFn: () => {
-      if (user?.role === "admin" || user?.role === "sales_manager") {
-        return fetchAllLeads();
-      }
-      return fetchLeads(); // agent + team lead RBAC
-    },
+    queryKey: ["lead-management"],
+    queryFn: fetchAllLeads,
     enabled: !!user?._id,
     staleTime: 0,
   });
@@ -260,13 +251,13 @@ const LeadManagement = () => {
       typeof lead.property === "object" ? lead.property?._id : lead.property;
     const leadUnit = lead.unit as Property;
     const propertySearchName = leadUnit
-      ? `${leadUnit.projectName} - ${leadUnit.plotNo}`
+      ? `${leadUnit?.projectName} - ${leadUnit?.plotNo}`
       : leadPropertyId || "";
 
     const matchesSearch =
-      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      propertySearchName.toLowerCase().includes(searchTerm.toLowerCase());
+      lead?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      propertySearchName?.toLowerCase().includes(searchTerm.toLowerCase());
 
     if (activeTab === "all") return matchesSearch;
     return matchesSearch && lead.status === activeTab;
@@ -306,8 +297,11 @@ const LeadManagement = () => {
       onSuccess: () => {
         toast.success("Lead saved successfully!");
         queryClient.invalidateQueries({
-          queryKey: ["lead-management", user?._id],
+          queryKey: ["lead-management"],
           refetchType: "active",
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["commissions"],
         });
         setIsAddLeadDialogOpen(false);
         setName("");
@@ -410,7 +404,7 @@ const LeadManagement = () => {
       onSuccess: () => {
         toast.success("Lead deleted successfully!");
         queryClient.invalidateQueries({
-          queryKey: ["lead-management", user?._id],
+          queryKey: ["lead-management"],
           refetchType: "active",
         });
         setDeleteDialogOpen(false);
@@ -447,7 +441,7 @@ const LeadManagement = () => {
               open={isAddLeadDialogOpen}
             >
               <DialogTrigger asChild>
-                {!isSalesManager && userCanAddUser && (
+                {userCanAddUser && (
                   <Button
                     onClick={() => {
                       setPropertyLeadToEdit(null);
@@ -790,84 +784,190 @@ const LeadManagement = () => {
             open={!!selectedLead}
             onOpenChange={() => setSelectedLead(null)}
           >
-            <DialogContent className="md:w-[600px] w-[90vw] max-h-[80vh] overflow-y-scroll rounded-xl">
+            <DialogContent className="md:w-[650px] w-[95vw] max-h-[85vh] overflow-y-auto rounded-xl">
               <DialogHeader>
                 <DialogTitle>Lead Details</DialogTitle>
+                <DialogDescription>
+                  Complete information about this sales lead
+                </DialogDescription>
               </DialogHeader>
-              <DialogDescription>
-                View the details of the selected lead.
-              </DialogDescription>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14">
+
+              <div className="space-y-6">
+                {/* ================= LEAD SUMMARY ================= */}
+                <div className="flex items-start gap-4">
+                  <Avatar className="h-16 w-16">
                     <AvatarImage
                       src={`https://ui-avatars.com/api/?name=${selectedLead.name.replace(
                         " ",
                         "+",
-                      )}&background=1A365D&color=fff&size=60`}
+                      )}&background=1A365D&color=fff&size=80`}
                     />
-                    <AvatarFallback>{selectedLead.name[0]}</AvatarFallback>
+                    <AvatarFallback>
+                      {selectedLead?.name?.[0] || "N/A"}
+                    </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="text-lg font-medium">{selectedLead.name}</h3>
+
+                  <div className="flex-1 space-y-2">
+                    <h3 className="text-xl font-semibold">
+                      {selectedLead?.name || "N/A"}
+                    </h3>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline">
+                        Lead: {selectedLead?.status || "N/A"}
+                      </Badge>
+
+                      <Badge
+                        className={
+                          selectedLead.propertyStatus === "Closed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-blue-100 text-blue-800"
+                        }
+                      >
+                        Property: {selectedLead?.propertyStatus || "N/A"}
+                      </Badge>
+                    </div>
+
                     <p className="text-sm text-muted-foreground">
-                      {selectedLead.source} • Added on{" "}
-                      {format(new Date(selectedLead.lastContact), "PPP")}
+                      Source: {selectedLead?.source || "N/A"}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Contact Information</p>
-                    <div className="text-sm flex items-center gap-2">
-                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{selectedLead.email}</span>
-                    </div>
-                    <div className="text-sm flex items-center gap-2">
-                      <PhoneCall className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span>{selectedLead.phone}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium">Interest Details</p>
-                    {renderLeadInterest(selectedLead)}
+                {/* ================= CONTACT INFO ================= */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">
+                    Contact Information
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div>Email: {selectedLead?.email || "N/A"}</div>
+                    <div>Phone: {selectedLead?.phone || "N/A"}</div>
                   </div>
                 </div>
-                {isSalesManager && (
+
+                {/* ================= PROPERTY DETAILS ================= */}
+                {selectedLead.isPropertyLead && (
                   <div>
-                    <p className="text-sm font-medium mb-1">Lead Added By</p>
-                    <p className="text-sm">
-                      Name: {selectedLead?.addedBy?.name}
-                    </p>
-                    <p className="text-sm">
-                      Email: {selectedLead?.addedBy?.email}
-                    </p>
-                    <p className="text-sm">
-                      Added on:{" "}
-                      {new Date(selectedLead?.createdAt).toLocaleDateString(
-                        "en-IN",
-                        {
-                          day: "2-digit",
-                          year: "numeric",
-                          month: "short",
-                        },
-                      )}
-                    </p>
+                    <h4 className="text-sm font-semibold mb-2">
+                      Property Details
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Project</p>
+                        <p className="font-medium">
+                          {typeof selectedLead?.property === "object"
+                            ? selectedLead?.property?.projectName || "N/A"
+                            : "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-muted-foreground">Location</p>
+                        <p className="font-medium">
+                          {typeof selectedLead?.property === "object"
+                            ? selectedLead?.property?.location || "N/A"
+                            : "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-muted-foreground">Property Type</p>
+                        <p className="font-medium">
+                          {typeof selectedLead?.property === "object"
+                            ? selectedLead?.property?.propertyType || "N/A"
+                            : "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-muted-foreground">Floor</p>
+                        <p className="font-medium">
+                          {typeof selectedLead?.floorUnit === "object"
+                            ? (selectedLead?.floorUnit?.floorNumber ?? "N/A")
+                            : "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-muted-foreground">Unit</p>
+                        <p className="font-medium">
+                          {typeof selectedLead?.unit === "object"
+                            ? selectedLead?.unit?.plotNo || "N/A"
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {/* ================= OWNERSHIP ================= */}
                 <div>
-                  <p className="text-sm font-medium mb-1">Notes</p>
-                  <p className="text-sm">{selectedLead.notes}</p>
+                  <h4 className="text-sm font-semibold mb-2">Ownership</h4>
+                  <div className="space-y-1 text-sm">
+                    <p>
+                      Added By:{" "}
+                      <span className="font-medium">
+                        {selectedLead?.addedBy?.name || "N/A"}
+                      </span>
+                    </p>
+                    <p>
+                      Role:{" "}
+                      <span className="font-medium">
+                        {selectedLead?.addedBy?.role || "N/A"}
+                      </span>
+                    </p>
+                    <p>
+                      Created On:{" "}
+                      {selectedLead?.createdAt
+                        ? new Date(selectedLead?.createdAt).toLocaleDateString(
+                            "en-IN",
+                          )
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ================= TIMELINE ================= */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">
+                    Activity Timeline
+                  </h4>
+                  <div className="space-y-1 text-sm">
+                    <p>
+                      Last Contact:{" "}
+                      {selectedLead?.lastContact
+                        ? format(new Date(selectedLead.lastContact), "PPP")
+                        : "N/A"}
+                    </p>
+                    <p>
+                      Last Updated:{" "}
+                      {selectedLead?.updatedAt
+                        ? format(new Date(selectedLead.updatedAt), "PPP")
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ================= NOTES ================= */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Notes</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedLead?.notes || "No notes added."}
+                  </p>
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedLead(null)}>
+
+              <DialogFooter className="mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSelectedLead(null)}
+                >
                   Close
                 </Button>
+
                 {!isSalesManager && (
                   <Button onClick={() => navigate("/visits")}>
-                    <Calendar className="mr-2 h-4 w-4" />
                     Schedule Site Visit
                   </Button>
                 )}
