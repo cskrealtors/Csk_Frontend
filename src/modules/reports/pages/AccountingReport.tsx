@@ -16,7 +16,6 @@ import { useNavigate } from "react-router-dom";
 const mockData: AccountingReportRow[] = [
   {
     period: "Jan 2025",
-    revenueTotal: 78500000,
     invoicesReceived: 145,
     invoicesApproved: 128,
     invoicesRejected: 17,
@@ -31,7 +30,7 @@ const mockData: AccountingReportRow[] = [
   },
   {
     period: "Feb 2025",
-    revenueTotal: 82000000,
+    // revenueTotal: 82000000,
     invoicesReceived: 158,
     invoicesApproved: 142,
     invoicesRejected: 16,
@@ -54,7 +53,7 @@ export default function AccountingReport() {
     groupBy: "month",
   });
 
-  const totalRevenue = mockData.reduce((sum, row) => sum + row.revenueTotal, 0);
+  // const totalRevenue = mockData.reduce((sum, row) => sum + row.revenueTotal, 0);
   const totalCashFlow = mockData.reduce((sum, row) => sum + row.netCashFlow, 0);
   const totalInvoices = mockData.reduce(
     (sum, row) => sum + row.invoicesReceived,
@@ -65,12 +64,7 @@ export default function AccountingReport() {
     mockData.length;
 
   const metrics = [
-    {
-      label: "Total Revenue",
-      value: totalRevenue,
-      format: "currency" as const,
-      trend: { value: 12.8, isPositive: true },
-    },
+
     {
       label: "Net Cash Flow",
       value: totalCashFlow,

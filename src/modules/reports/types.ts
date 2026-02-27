@@ -59,9 +59,7 @@ export interface PropertiesReportRow {
   soldUnits: number;
   availableUnits: number;
   sellThroughPercent: number;
-  bookings: number;
-  revenue: number;
-  avgDealSize: number;
+  enquiries: number;
 }
 
 export interface UserAccessReportRow {
@@ -104,8 +102,8 @@ export interface SalesManagerReportRow {
   period: string;
   bookings: number;
   dealsWon: number;
-  revenue: number;
-  avgDealSize: number;
+  // revenue: number;
+  // avgDealSize: number;
 }
 
 export interface ContractorReportRow {
@@ -133,7 +131,7 @@ export interface SiteInchargeReportRow {
 
 export interface AccountingReportRow {
   period: string;
-  revenueTotal: number;
+  // revenueTotal: number;
   invoicesReceived: number;
   invoicesApproved: number;
   invoicesRejected: number;
