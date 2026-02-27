@@ -89,6 +89,7 @@ export interface TeamLeadReportRow {
   period: string;
   teamMembers: number;
   leadsClosed: number;
+  totalLeads: number;
   siteBookingsApproved: number;
   siteBookingsRejected: number;
   incentivesToDate: number;
@@ -102,8 +103,9 @@ export interface SalesManagerReportRow {
   period: string;
   bookings: number;
   dealsWon: number;
-  // revenue: number;
-  // avgDealSize: number;
+  revenue: number;
+  avgDealSize: number;
+  conversionRate: number;
 }
 
 export interface ContractorReportRow {

@@ -114,7 +114,7 @@ export default function AgentsReport() {
               className="mb-4"
             >
               <ChevronLeft className="mr-2 h-4 w-4" />
-              Back
+              Back to Reports
             </Button>
 
             <h1 className="text-3xl font-bold">Agent Performance Report</h1>

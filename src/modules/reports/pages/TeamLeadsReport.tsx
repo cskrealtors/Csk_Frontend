@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FilterBar } from "../components/FilterBar";
@@ -11,79 +11,112 @@ import { subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-
-const mockData: TeamLeadReportRow[] = [
-  {
-    teamLeadId: "1",
-    teamLeadName: "Mike Johnson",
-    period: "Jan 2025",
-    teamMembers: 8,
-    leadsClosed: 45,
-    siteBookingsApproved: 32,
-    siteBookingsRejected: 5,
-    incentivesToDate: 1250000,
-    trips: 18,
-    kms: 420,
-  },
-  {
-    teamLeadId: "2",
-    teamLeadName: "Lisa Anderson",
-    period: "Jan 2025",
-    teamMembers: 6,
-    leadsClosed: 38,
-    siteBookingsApproved: 28,
-    siteBookingsRejected: 3,
-    incentivesToDate: 980000,
-    trips: 15,
-    kms: 360,
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import Loader from "@/components/Loader";
 
 export default function TeamLeadsReport() {
   const navigate = useNavigate();
+
   const [filters, setFilters] = useState<ReportFilters>({
     dateFrom: subDays(new Date(), 30),
     dateTo: new Date(),
     groupBy: "month",
+    search: "",
   });
 
-  const totalClosed = mockData.reduce((sum, row) => sum + row.leadsClosed, 0);
-  const totalIncentives = mockData.reduce(
-    (sum, row) => sum + row.incentivesToDate,
-    0
-  );
-  const totalApproved = mockData.reduce(
-    (sum, row) => sum + row.siteBookingsApproved,
-    0
-  );
-  const totalKms = mockData.reduce((sum, row) => sum + row.kms, 0);
+  /* ================= API ================= */
 
-  const metrics = [
-    {
-      label: "Total Leads Closed",
-      value: totalClosed,
-      format: "number" as const,
-      trend: { value: 18.5, isPositive: true },
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["team-leads-report", filters],
+    queryFn: async () => {
+      const res = await axios.get(
+        `${import.meta.env.VITE_URL}/api/reports/team-leads`,
+        {
+          params: {
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo,
+            groupBy: filters.groupBy,
+          },
+          withCredentials: true,
+        },
+      );
+
+      return res.data?.data || [];
     },
-    {
-      label: "Total Incentives",
-      value: totalIncentives,
-      format: "currency" as const,
-      trend: { value: 22.3, isPositive: true },
-    },
-    {
-      label: "Bookings Approved",
-      value: totalApproved,
-      format: "number" as const,
-      trend: { value: 12.8, isPositive: true },
-    },
-    { label: "Total KMs", value: totalKms, format: "number" as const },
-  ];
+  });
+
+  const reportData: TeamLeadReportRow[] = Array.isArray(data) ? data : [];
+
+  /* ================= SEARCH ================= */
+
+  const filteredData = useMemo(() => {
+    if (!filters.search) return reportData;
+
+    return reportData.filter((row) =>
+      row.teamLeadName?.toLowerCase().includes(filters.search!.toLowerCase()),
+    );
+  }, [reportData, filters.search]);
+
+  /* ================= METRICS ================= */
+
+  const metrics = useMemo(() => {
+    const totalClosed = filteredData.reduce(
+      (sum, row) => sum + (row.leadsClosed || 0),
+      0,
+    );
+
+    const totalLeads = filteredData.reduce(
+      (sum, row) => sum + (row?.totalLeads || 0),
+      0,
+    );
+
+    // const totalApproved = filteredData.reduce(
+    //   (sum, row) => sum + (row.leadsClosed || 0),
+    //   0,
+    // );
+
+    const avgConversion =
+      totalLeads > 0
+        ? Number(((totalClosed / totalLeads) * 100).toFixed(1))
+        : 0;
+
+    return [
+      {
+        label: "Total Leads Closed",
+        value: totalClosed,
+        format: "number" as const,
+      },
+      {
+        label: "Total Leads	",
+        value: totalLeads,
+        format: "number" as const,
+      },
+      {
+        label: "Avg Conversion",
+        value: avgConversion,
+        format: "percent" as const,
+      },
+    ];
+  }, [filteredData]);
+
+  if (isLoading) return <Loader />;
+
+  if (isError) {
+    return (
+      <MainLayout>
+        <div className="p-6 text-red-500 font-medium">
+          Failed to load Team Lead report
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-start">
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <Button
               variant="outline"
@@ -91,35 +124,44 @@ export default function TeamLeadsReport() {
               onClick={() => navigate("/reports")}
               className="mb-4"
             >
-              <ChevronLeft className="mr-2 h-4 w-4" /> Back to Buildings
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Reports
             </Button>
+
             <h1 className="text-3xl font-bold">Team Lead Report</h1>
             <p className="text-muted-foreground">
-              Team performance, incentives, and vehicle tracking
+              Team performance and aggregated metrics
             </p>
           </div>
+
           <ExportButton
             reportTitle="Team Lead Report"
-            data={mockData}
+            data={filteredData}
             columns={reportColumns["team-leads"]}
             filters={filters}
           />
         </div>
 
-        <FilterBar filters={filters} onFiltersChange={setFilters} />
+        {/* FILTER */}
+        <FilterBar filters={filters} onFiltersChange={setFilters} showSearch />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* METRICS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {metrics.map((metric, index) => (
             <MetricCard key={index} metric={metric} />
           ))}
         </div>
 
+        {/* TABLE */}
         <Card>
           <CardHeader>
             <CardTitle>Team Lead Performance</CardTitle>
           </CardHeader>
           <CardContent>
-            <DataTable columns={reportColumns["team-leads"]} data={mockData} />
+            <DataTable
+              columns={reportColumns["team-leads"]}
+              data={filteredData}
+            />
           </CardContent>
         </Card>
       </div>

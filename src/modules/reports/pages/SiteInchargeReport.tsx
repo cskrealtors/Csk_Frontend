@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FilterBar } from "../components/FilterBar";
@@ -11,79 +11,93 @@ import { subDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-
-const mockData: SiteInchargeReportRow[] = [
-  {
-    siteInchargeId: "1",
-    name: "Raj Kumar",
-    period: "Jan 2025",
-    projectsActive: 3,
-    qcTasksCreated: 45,
-    tasksVerified: 128,
-    inspections: 22,
-    avgProgressPercent: 75.8,
-  },
-  {
-    siteInchargeId: "2",
-    name: "Priya Sharma",
-    period: "Jan 2025",
-    projectsActive: 2,
-    qcTasksCreated: 38,
-    tasksVerified: 95,
-    inspections: 18,
-    avgProgressPercent: 68.5,
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import Loader from "@/components/Loader";
 
 export default function SiteInchargeReport() {
   const navigate = useNavigate();
+
   const [filters, setFilters] = useState<ReportFilters>({
     dateFrom: subDays(new Date(), 30),
     dateTo: new Date(),
     groupBy: "month",
   });
 
-  const totalProjects = mockData.reduce(
-    (sum, row) => sum + row.projectsActive,
-    0
-  );
-  const totalVerified = mockData.reduce(
-    (sum, row) => sum + row.tasksVerified,
-    0
-  );
-  const totalInspections = mockData.reduce(
-    (sum, row) => sum + row.inspections,
-    0
-  );
-  const avgProgress =
-    mockData.reduce((sum, row) => sum + row.avgProgressPercent, 0) /
-    mockData.length;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["site-incharge-report", filters],
+    queryFn: async () => {
+      const res = await axios.get(
+        `${import.meta.env.VITE_URL}/api/reports/site-incharge`,
+        {
+          params: {
+            dateFrom: filters.dateFrom,
+            dateTo: filters.dateTo,
+            groupBy: filters.groupBy,
+          },
+          withCredentials: true,
+        },
+      );
 
-  const metrics = [
-    {
-      label: "Active Projects",
-      value: totalProjects,
-      format: "number" as const,
+      return res.data?.data || [];
     },
-    {
-      label: "Tasks Verified",
-      value: totalVerified,
-      format: "number" as const,
-      trend: { value: 18.2, isPositive: true },
-    },
-    {
-      label: "Inspections Done",
-      value: totalInspections,
-      format: "number" as const,
-      trend: { value: 12.5, isPositive: true },
-    },
-    {
-      label: "Avg Progress",
-      value: avgProgress,
-      format: "percent" as const,
-      trend: { value: 8.7, isPositive: true },
-    },
-  ];
+  });
+
+  const reportData: SiteInchargeReportRow[] = Array.isArray(data) ? data : [];
+
+  const metrics = useMemo(() => {
+    const totalProjects = reportData.reduce(
+      (sum, row) => sum + row.projectsActive,
+      0,
+    );
+
+    const totalVerified = reportData.reduce(
+      (sum, row) => sum + row.tasksVerified,
+      0,
+    );
+
+    const totalInspections = reportData.reduce(
+      (sum, row) => sum + row.inspections,
+      0,
+    );
+
+    const avgProgress =
+      reportData.length > 0
+        ? reportData.reduce((sum, row) => sum + row.avgProgressPercent, 0) /
+          reportData.length
+        : 0;
+
+    return [
+      {
+        label: "Active Projects",
+        value: totalProjects,
+        format: "number" as const,
+      },
+      {
+        label: "Tasks Verified",
+        value: totalVerified,
+        format: "number" as const,
+      },
+      {
+        label: "Inspections Done",
+        value: totalInspections,
+        format: "number" as const,
+      },
+      { label: "Avg Progress", value: avgProgress, format: "percent" as const },
+    ];
+  }, [reportData]);
+
+  if (isLoading) return <Loader />;
+
+  if (isError) {
+    return (
+      <MainLayout>
+        <div className="p-6 text-red-500 font-medium">
+          Failed to load Site In-Charge report
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -96,17 +110,18 @@ export default function SiteInchargeReport() {
               onClick={() => navigate("/reports")}
               className="mb-4"
             >
-              <ChevronLeft className="mr-2 h-4 w-4" /> Back to Buildings
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Reports
             </Button>
             <h1 className="text-3xl font-bold">Site In-Charge Report</h1>
             <p className="text-muted-foreground">
-              Project oversight, QC tasks, inspections, and construction
-              progress
+              Project oversight, QC tasks, inspections and progress tracking
             </p>
           </div>
+
           <ExportButton
             reportTitle="Site In-Charge Report"
-            data={mockData}
+            data={reportData}
             columns={reportColumns["site-incharge"]}
             filters={filters}
           />
@@ -127,7 +142,7 @@ export default function SiteInchargeReport() {
           <CardContent>
             <DataTable
               columns={reportColumns["site-incharge"]}
-              data={mockData}
+              data={reportData}
             />
           </CardContent>
         </Card>
