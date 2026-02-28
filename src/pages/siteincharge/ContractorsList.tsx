@@ -309,8 +309,6 @@ const ContractorsList = () => {
     setViewOpen(true);
   };
 
-  console.log("contracot", selectedContractor);
-
   return (
     <MainLayout>
       <div className="space-y-6 md:p-8 p-2">

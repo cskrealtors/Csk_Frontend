@@ -45,6 +45,33 @@ type Props = {
   mode: "add" | "edit";
 };
 
+const defaultFormValues: FormValues = {
+  userId: "",
+  companyName: "",
+  gstNumber: "",
+  panCardNumber: "",
+  contractorType: "",
+  accountsIncharge: "",
+  amount: 0,
+  advancePaid: 0,
+  balancePaid: 0,
+  billInvoiceNumber: "",
+  contractStartDate: "",
+  contractEndDate: "",
+  billedDate: "",
+  finalPaymentDate: "",
+  workDetails: "",
+  billApprovedBySiteIncharge: false,
+  billProcessedByAccountant: false,
+  isActive: true,
+  bankName: "",
+  accountNumber: "",
+  ifscCode: "",
+  branchName: "",
+  projectsAssigned: [],
+  paymentDetails: [],
+};
+
 const AddContractorDialog = ({
   openDialog,
   setOpenConDialog,
@@ -67,32 +94,7 @@ const AddContractorDialog = ({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(contractorSchema),
-    defaultValues: {
-      userId: "",
-      companyName: "",
-      gstNumber: "",
-      panCardNumber: "",
-      contractorType: "",
-      accountsIncharge: "",
-      amount: 0,
-      advancePaid: 0,
-      balancePaid: 0,
-      billInvoiceNumber: "",
-      contractStartDate: "",
-      contractEndDate: "",
-      billedDate: "",
-      finalPaymentDate: "",
-      workDetails: "",
-      billApprovedBySiteIncharge: false,
-      billProcessedByAccountant: false,
-      isActive: true,
-      bankName: "",
-      accountNumber: "",
-      ifscCode: "",
-      branchName: "",
-      projectsAssigned: [],
-      paymentDetails: [],
-    },
+    defaultValues: defaultFormValues,
   });
   useEffect(() => {
     register("projectsAssigned");
@@ -191,7 +193,7 @@ const AddContractorDialog = ({
         setImagePreview(null);
       }
     } else {
-      reset();
+      reset(defaultFormValues);
       setSelectedProjects([]);
       setImagePreview(null);
     }
@@ -347,7 +349,7 @@ const AddContractorDialog = ({
 
   return (
     <Dialog open={openDialog} onOpenChange={setOpenConDialog}>
-      <DialogContent className="md:w-[75vw] w-[90vw] max-h-[90vh] flex flex-col rounded-xl">
+      <DialogContent className="w-[95vw] md:w-[90vw] lg:w-[85vw] max-w-5xl max-h-[90vh] flex flex-col rounded-xl">
         <DialogHeader>
           <DialogTitle>
             {mode === "edit" ? "Edit Contractor" : "Add Contractor"}

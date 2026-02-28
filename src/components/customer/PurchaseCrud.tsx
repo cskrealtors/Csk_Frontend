@@ -73,7 +73,8 @@ type PurchaseForm = z.infer<typeof purchaseSchema>;
 /* -------------------- API HELPERS -------------------- */
 const fetchPurchases = async () => {
   const { data } = await axios.get(
-    `${import.meta.env.VITE_URL}/api/purchases/getAllPurchase`
+    `${import.meta.env.VITE_URL}/api/purchases/getAllPurchase`,
+    { withCredentials: true },
   );
   return data.data;
 };
@@ -81,7 +82,8 @@ const fetchPurchases = async () => {
 const createPurchase = async (payload: PurchaseForm) => {
   const { data } = await axios.post(
     `${import.meta.env.VITE_URL}/api/purchases/addPurchase`,
-    payload
+    payload,
+    { withCredentials: true },
   );
   return data;
 };
@@ -95,14 +97,16 @@ const updatePurchase = async ({
 }) => {
   const { data } = await axios.put(
     `${import.meta.env.VITE_URL}/api/purchases/updatePurchase/${id}`,
-    payload
+    payload,
+    { withCredentials: true },
   );
   return data;
 };
 
 const deletePurchase = async (id: string) => {
   const { data } = await axios.delete(
-    `${import.meta.env.VITE_URL}/api/purchases/deletePurchase/${id}`
+    `${import.meta.env.VITE_URL}/api/purchases/deletePurchase/${id}`,
+    { withCredentials: true },
   );
   return data;
 };
@@ -468,10 +472,10 @@ export default function PurchaseCrud() {
                                 p.totalSaleConsideration || 0,
                               advance: p.advance || 0,
                               lastPaymentDate: formatDateForInput(
-                                p.lastPaymentDate
+                                p.lastPaymentDate,
                               ),
                               nextPaymentDate: formatDateForInput(
-                                p.nextPaymentDate
+                                p.nextPaymentDate,
                               ),
                               paymentDetails: p.paymentDetails || "",
                               notes: p.notes || "",
