@@ -70,11 +70,7 @@ import {
   fetchCommissionEligibleLeads,
 } from "@/utils/leads/CommissionConfig";
 import { fetchRolePermissions } from "@/utils/units/Methods";
-function isObject<T extends object>(
-  value: T | string | undefined | null,
-): value is T {
-  return typeof value === "object" && value !== null;
-}
+
 const MyCommissions = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
@@ -136,6 +132,7 @@ const MyCommissions = () => {
       const { data } = await axios.post(
         `${import.meta.env.VITE_URL}/api/commission/addCommissions`,
         newCommission,
+        { withCredentials: true },
       );
       return data;
     },
@@ -291,9 +288,6 @@ const MyCommissions = () => {
         };
       }
       acc[monthYear].sales += 1;
-      acc[monthYear].amount += parseFloat(
-        commission.commissionAmount.replace(/[₹,]/g, ""),
-      );
       acc[monthYear].amount += commission.commissionAmount;
       return acc;
     },
@@ -352,16 +346,6 @@ const MyCommissions = () => {
         : "N/A";
 
       return [
-        `"${commission.clientId.addedBy.name}"`, // Access client name from populated Lead's addedBy
-        `"${
-          isObject(commission.clientId.property)
-            ? commission.clientId.property.projectName
-            : isObject(commission.clientId.openPlot)
-              ? commission.clientId.openPlot.projectName
-              : isObject(commission.clientId.openLand)
-                ? commission.clientId.openLand.projectName
-                : "N/A"
-        }"`, // Access property name from populated Lead's property
         `"${commission.clientId?.addedBy?.name ?? "N/A"}"`, // Access client name from populated Lead's addedBy
         `"${commission.clientId?.property?.projectName ?? "N/A"}"`, // Access property name from populated Lead's property
         `"${commission.clientId.unit?.plotNo}"`,
@@ -413,12 +397,6 @@ const MyCommissions = () => {
     setCommissionFormData({
       _id: commission._id,
       clientId: commission.clientId._id,
-      commissionAmount: parseFloat(
-        commission.commissionAmount.replace(/[₹,]/g, ""),
-      ).toString(),
-      commissionPercent: parseFloat(
-        commission.commissionPercent.replace(/%/, ""),
-      ).toString(),
       commissionAmount: commission.commissionAmount.toString(),
       commissionPercent: commission.commissionPercent.toString(),
       saleDate: new Date(commission.saleDate),
@@ -490,10 +468,6 @@ const MyCommissions = () => {
     }
 
     const formattedPayload = {
-      commissionAmount: `₹${parseFloat(
-        commissionFormData.commissionAmount,
-      ).toLocaleString("en-IN")}`,
-      commissionPercent: `${parseFloat(commissionFormData.commissionPercent)}%`,
       commissionAmount: parseFloat(commissionFormData.commissionAmount),
       commissionPercent: parseFloat(commissionFormData.commissionPercent),
       saleDate: commissionFormData.saleDate.toISOString(),
@@ -596,11 +570,6 @@ const MyCommissions = () => {
               <div className="flex items-center pt-1 text-estate-success">
                 <ArrowUpRight className="mr-1 h-4 w-4" />
                 <span className="text-xs">
-
-                  {parseFloat(
-                    commissionSummary.thisMonth.replace(/[₹,]/g, ""),
-                  ) >
-                  parseFloat(commissionSummary.lastMonth.replace(/[₹,]/g, ""))
                   {thisMonthEarned > lastMonthEarned
                     ? "+ Increased"
                     : "- Decreased"}{" "}
@@ -704,82 +673,7 @@ const MyCommissions = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredCommissions.length > 0 ? (
-                      filteredCommissions.map((commission) => (
-                        <TableRow key={commission._id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage
-                                  src={
-                                    commission.clientId?.addedBy?.avatar || ""
-                                  }
-                                />
-                                <AvatarFallback>
-                                  {commission.clientId?.addedBy?.name
-                                    ? commission.clientId?.addedBy.name[0]
-                                    : "N/A"}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="font-medium">
-                                {commission.clientId?.addedBy?.name || "N/A"}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p>
-                                {commission.clientId.property?.projectName ||
-                                  "N/A"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Unit:{" "}
-                                {commission.clientId.unit?.plotNo || "N/A"}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {commission.commissionAmount}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {commission.commissionPercent} of ₹
-                                {(
-                                  commission.clientId.unit?.totalAmount || 0
-                                ).toLocaleString("en-IN")}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {commission.saleDate
-                              ? format(
-                                  new Date(commission.saleDate),
-                                  "MMM d, yyyy",
-                                )
-                              : "N/A"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                commission.status === "paid"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }
-                            >
-                              {commission.status === "paid"
-                                ? "Paid"
-                                : "Pending"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  setSelectedCommission(commission)
-
-               filteredCommissions.map((commission) => {
+                      filteredCommissions.map((commission) => {
                         const lead = commission.clientId;
 
                         const clientName = lead?.addedBy?.name ?? "N/A";
@@ -1168,8 +1062,11 @@ const MyCommissions = () => {
           open={isAddEditDialogOpen}
           onOpenChange={setIsAddEditDialogOpen}
         >
-          <DialogContent onInteractOutside={(e) => e.preventDefault()}
-  onPointerDownOutside={(e) => e.preventDefault()} className="md:w-[600px] w-[90vw] max-h-[80vh] overflow-scroll rounded-xl">
+          <DialogContent
+            onInteractOutside={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => e.preventDefault()}
+            className="md:w-[600px] w-[90vw] max-h-[80vh] overflow-scroll rounded-xl"
+          >
             <DialogHeader>
               <DialogTitle>
                 {isEditing ? "Edit Commission" : "Add New Commission"}
@@ -1208,20 +1105,8 @@ const MyCommissions = () => {
                         actualCommissionEligibleLeads.map((lead) => (
                           <SelectItem key={lead._id} value={lead._id}>
                             {lead.name || "N/A"} -{" "}
-                            {isObject(lead.property)
-                              ? lead.property.projectName
-                              : isObject(lead.openPlot)
-                                ? lead.openPlot.projectName
-                                : isObject(lead.openLand)
-                                  ? lead.openLand.projectName
-                                  : "N/A"}{" "}
-                            (
-                            {isObject(lead.unit)
-                              ? lead.unit.plotNo
-                              : isObject(lead.innerPlot)
-                                ? lead.innerPlot.plotNo
-                                : "N/A"}
-                            )
+                            {lead.property?.projectName || "N/A"} (
+                            {lead.unit?.plotNo || "N/A"})
                           </SelectItem>
                         ))
                       ) : (
